@@ -27,7 +27,7 @@ function Profile({ token }) {
       setLoading(true);
       try {
         // Note: You'll need to import axios at the top: import axios from 'axios';
-        const response = await fetch('http://127.0.0.1:8000/user/profile', {
+        const response = await fetch('https://letterboxd-1.onrender.com/user/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const userData = await response.json();
@@ -54,7 +54,7 @@ function Profile({ token }) {
     
     try {
       // Note: You'll need to import axios at the top: import axios from 'axios';
-      const response = await fetch('http://127.0.0.1:8000/user/profile', {
+      const response = await fetch('https://letterboxd-1.onrender.com/user/profile', {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`,
