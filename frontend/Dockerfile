@@ -1,19 +1,21 @@
-# 1. Use Node image
+# 1. Use Node base image
 FROM node:18
 
-# 2. Set workdir
+# 2. Set working dir
 WORKDIR /app
 
-# 3. Copy package.json & install deps
-COPY package*.json ./
+# 3. Copy package.json from frontend folder
+COPY frontend/package*.json ./
+
+# 4. Install deps
 RUN npm install
 
-# 4. Copy frontend code
-COPY . .
+# 5. Copy rest of the frontend code
+COPY frontend/ ./
 
-# 5. Build frontend
+# 6. Build
 RUN npm run build
 
-# 6. Serve build using a simple web server
+# 7. Serve with a simple server (optional for Docker)
 RUN npm install -g serve
-CMD ["serve", "-s", "build", "-l", "3000"]
+CMD ["serve", "-s", "build"]
