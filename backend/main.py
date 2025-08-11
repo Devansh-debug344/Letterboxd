@@ -14,7 +14,8 @@ def create_app() -> FastAPI:
     )
     origins = [
     "http://localhost:5173",      # Vite (React dev server)
-    "http://127.0.0.1:5173",      # Sometimes browser switches between 127.0.0.1 and localhost
+    "http://127.0.0.1:5173",
+     "https://letterboxd-7.onrender.com", # Sometimes browser switches between 127.0.0.1 and localhost
     ]
 
     app.add_middleware(
