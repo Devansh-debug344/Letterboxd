@@ -61,7 +61,7 @@ function Login({ OnLoginSuccess }) {
     form.append('password', formData.password);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/login', form);
+      const response = await axios.post('/login', form);
       
       setMessage({ text: 'Login successful! Welcome back!', type: 'success' });
       

@@ -66,7 +66,7 @@ function SearchMovies({ token }) {
     
     try {
       await axios.post(
-        'http://127.0.0.1:8000/watchlist/',
+        'https://letterboxd-1.onrender.com/watchlist/',
         { movie_name: title },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -86,7 +86,7 @@ function SearchMovies({ token }) {
   // Fetch all reviews
   const fetchReviews = async () => {
     try {
-      const res = await axios.get('http://127.0.0.1:8000/review/');
+      const res = await axios.get('/review/');
       setAllReviews(res.data);
     } catch (error) {
       console.error('Failed to fetch reviews', error);
@@ -114,7 +114,7 @@ function SearchMovies({ token }) {
     
     try {
       await axios.post(
-        'http://127.0.0.1:8000/review/',
+        'https://letterboxd-1.onrender.com/review/',
         {
           movie_name: title,
           review: reviewText,

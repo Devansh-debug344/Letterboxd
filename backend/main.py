@@ -35,3 +35,4 @@ def create_app() -> FastAPI:
     app.include_router(review.router)
 
     return app
+

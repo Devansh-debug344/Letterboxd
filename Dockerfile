@@ -23,4 +23,6 @@ COPY --from=frontend-builder /app/frontend/dist/ ./app/static/
 
 # Expose port & run FastAPI
 EXPOSE 8000
+
 CMD ["uvicorn", "run:app", "--host", "0.0.0.0", "--port", "8000"]
+

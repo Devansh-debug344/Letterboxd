@@ -63,7 +63,7 @@ function Register({ onSuccess }) {
     setMessage(null);
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/user/', {
+      const response = await axios.post('/user/', {
         username: formData.username,
         email: formData.email,
         password: formData.password,
