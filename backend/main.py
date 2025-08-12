@@ -29,10 +29,10 @@ def create_app() -> FastAPI:
     from app.db.session import engine
 
     Base.metadata.create_all(bind=engine)
-    app.include_router(login.router)
-    app.include_router(user.router)
-    app.include_router(watchlist.router)
-    app.include_router(review.router)
+    app.include_router(login.router , prefix="/api")
+    app.include_router(user.router , prefix="/api")
+    app.include_router(watchlist.router , prefix="/api")
+    app.include_router(review.router , prefix="/api")
 
     return app
 
