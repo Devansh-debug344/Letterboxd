@@ -26,11 +26,11 @@ function Profile({ token }) {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        // Note: You'll need to import axios at the top: import axios from 'axios';
         const response = await axios.get('/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const userData = await response.json();
+        // With axios, data is already parsed - no need for .json()
+        const userData = response.data;
         
         setUser(userData);
         setUpdatedData({ 
@@ -53,16 +53,15 @@ function Profile({ token }) {
     setSaving(true);
     
     try {
-      // Note: You'll need to import axios at the top: import axios from 'axios';
-      const response = await axios.patch('/api/profile', {
-        method: 'PATCH',
+      // Correct axios PATCH syntax
+      const response = await axios.patch('/api/profile', updatedData, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updatedData)
+        }
       });
-      const userData = await response.json();
+      // With axios, data is already parsed
+      const userData = response.data;
       
       setUser({ 
         username: userData.username, 
