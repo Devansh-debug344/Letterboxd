@@ -86,7 +86,7 @@ function SearchMovies({ token }) {
   // Fetch all reviews
   const fetchReviews = async () => {
     try {
-      const res = await axios.get('https://letterboxd-1.onrender.com/review/');
+      const res = await axios.get('/review/');
       setAllReviews(res.data);
     } catch (error) {
       console.error('Failed to fetch reviews', error);
