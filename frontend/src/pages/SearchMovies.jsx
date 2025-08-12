@@ -36,7 +36,7 @@ function SearchMovies({ token }) {
     setMessage(null);
     
     try {
-      const res = await axios.get(`https://www.omdbapi.com/?apikey=afb3dcd&s=${query}`);
+      const res = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=3977efa4158b0d95f72a62e18c264948&query=${query}`);
       if (res.data.Search) {
         setResults(res.data.Search);
         setMessage({ text: `Found ${res.data.Search.length} movies`, type: 'success' });
