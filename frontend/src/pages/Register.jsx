@@ -63,7 +63,7 @@ function Register({ onSuccess }) {
     setMessage(null);
 
     try {
-      const response = await axios.post('/user/', {
+      const response = await axios.post('/api/user/', {
         username: formData.username,
         email: formData.email,
         password: formData.password,
