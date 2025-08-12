@@ -44,6 +44,6 @@ uvloop==0.21.0
 watchfiles==1.1.0
 websockets==15.0.1
 pydantic-settings
-psycopg2
+psycopg2-binary
 passlib
 python-jose[cryptography]
