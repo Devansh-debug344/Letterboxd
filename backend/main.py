@@ -1,32 +1,37 @@
 from fastapi import FastAPI
-from app.db.base import Base
-from app.db.session import engine
-from app.models.user import User 
-from app.models.movie import Movie
-from app.models.review import Review
-from app.models.watchlist import WatchList
-from app.api import login , user , watchlist , review
 from fastapi.middleware.cors import CORSMiddleware
-def create_app() -> FastAPI:
-    app = FastAPI(
-        title ="Movie Booking App",
-        version="1.0.0",
-    )
-    origins = [
-    "http://localhost:5173",      # Vite (React dev server)
-    "http://127.0.0.1:5173",      # Sometimes browser switches between 127.0.0.1 and localhost
-    ]
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
+def create_app() -> FastAPI:
+    app = FastAPI(title="Movie Booking App", version="1.0.0")
+
+    # CORS
+    origins = [
+        "*",  # If serving frontend from same server, you can allow all
+    ]
     app.add_middleware(
-     CORSMiddleware,
-     allow_origins=origins,  # 👈 allow frontend dev server
-     allow_credentials=True,
-     allow_methods=["*"],
-     allow_headers=["*"],
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
-    Base.metadata.create_all(bind = engine)
+
+    # Serve static frontend files
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+
+    # Your API routers
+    from app.api import login, user, watchlist, review
+    from app.db.base import Base
+    from app.db.session import engine
+
+    Base.metadata.create_all(bind=engine)
     app.include_router(login.router)
     app.include_router(user.router)
     app.include_router(watchlist.router)
     app.include_router(review.router)
+
     return app
