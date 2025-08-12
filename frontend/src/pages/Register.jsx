@@ -63,7 +63,7 @@ function Register({ onSuccess }) {
     setMessage(null);
 
     try {
-      const response = await axios.post('https://letterboxd-1.onrender.com/user/', {
+      const response = await axios.post('/user/', {
         username: formData.username,
         email: formData.email,
         password: formData.password,
