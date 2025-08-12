@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+/import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { 
@@ -26,7 +26,7 @@ function Profile({ token }) {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const response = await axios.get('/api/profile', {
+        const response = await axios.get('/api/user/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
         // With axios, data is already parsed - no need for .json()
@@ -54,7 +54,7 @@ function Profile({ token }) {
     
     try {
       // Correct axios PATCH syntax
-      const response = await axios.patch('/api/profile', updatedData, {
+      const response = await axios.patch('/api/user/profile', updatedData, {
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
