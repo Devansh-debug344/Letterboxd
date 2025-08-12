@@ -27,7 +27,7 @@ function Profile({ token }) {
       setLoading(true);
       try {
         // Note: You'll need to import axios at the top: import axios from 'axios';
-        const response = await axios.get('/user/profile', {
+        const response = await axios.get('/api/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const userData = await response.json();
@@ -54,7 +54,7 @@ function Profile({ token }) {
     
     try {
       // Note: You'll need to import axios at the top: import axios from 'axios';
-      const response = await axios.patch('/user/profile', {
+      const response = await axios.patch('/api/profile', {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`,
