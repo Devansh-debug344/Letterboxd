@@ -19,7 +19,8 @@ COPY backend/ .
 
 # Copy built frontend into backend static folder
 RUN mkdir -p app/static
-COPY --from=frontend-builder /app/frontend/dist/ ./app/static/
+COPY --from=frontend-builder /app/frontend/dist/ ./static/
+
 
 # Expose port & run FastAPI
 EXPOSE 8000
