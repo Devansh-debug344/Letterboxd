@@ -21,7 +21,7 @@ function Reviews({ token }) {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/review/', { headers });
+      const res = await axios.get('/api/review/', { headers });
       setReviews(res.data);
     } catch (error) {
       console.error("Failed to fetch reviews", error);
@@ -35,7 +35,7 @@ function Reviews({ token }) {
     setIsSubmitting(true);
     try {
       await axios.post(
-        '/review/',
+        '/api/review/',
         { movie_name: movie, review: text, likes: 0 },
         { headers }
       );
@@ -51,7 +51,7 @@ function Reviews({ token }) {
   const updateReview = async (movie_name) => {
     try {
       await axios.patch(
-        '/review/',
+        '/api/review/',
         {
           movie_name,
           review: editText[movie_name] || '',
@@ -69,7 +69,7 @@ function Reviews({ token }) {
   const deleteReview = async (movie_name) => {
     try {
       await axios.delete(
-        '/review/',
+        '/api/review/',
         {
           data: { movie_name },
           headers
