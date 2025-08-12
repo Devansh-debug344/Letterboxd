@@ -24,7 +24,7 @@ function Watchlist({ token }) {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('https://letterboxd-1.onrender.com/watchlist/', {
+      const res = await axios.get('/watchlist/', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -65,7 +65,7 @@ function Watchlist({ token }) {
         payload.rating = parseFloat(raw.rating);
       }
 
-      await axios.patch('https://letterboxd-1.onrender.com/watchlist/', payload, {
+      await axios.patch('/watchlist/', payload, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -81,7 +81,7 @@ function Watchlist({ token }) {
 
   const deleteItem = async (movie_name) => {
     try {
-      await axios.delete('https://letterboxd-1.onrender.com/watchlist/', {
+      await axios.delete('/watchlist/', {
         headers: {
           Authorization: `Bearer ${token}`
         },
