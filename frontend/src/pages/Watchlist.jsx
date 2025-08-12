@@ -24,7 +24,7 @@ function Watchlist({ token }) {
   const fetchList = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/watchlist/', {
+      const res = await axios.get('/api/watchlist/', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -65,7 +65,7 @@ function Watchlist({ token }) {
         payload.rating = parseFloat(raw.rating);
       }
 
-      await axios.patch('/watchlist/', payload, {
+      await axios.patch('/api/watchlist/', payload, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -81,7 +81,7 @@ function Watchlist({ token }) {
 
   const deleteItem = async (movie_name) => {
     try {
-      await axios.delete('/watchlist/', {
+      await axios.delete('/api/watchlist/', {
         headers: {
           Authorization: `Bearer ${token}`
         },
