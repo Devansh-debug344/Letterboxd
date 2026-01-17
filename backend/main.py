@@ -21,7 +21,17 @@ def create_app() -> FastAPI:
     from app.api import login, user, watchlist, review
     from app.db.base import Base  
     from app.db.session import engine
-    Base.metadata.create_all(bind=engine)
+
+    from sqlalchemy.exc import OperationalError
+
+   @app.on_event("startup")
+       async def startup_db():
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("Database connected and tables created")
+    except OperationalError as e:
+        print("Database not ready yet:", e)
+
     
     app.include_router(login.router, prefix="/api")
     app.include_router(user.router, prefix="/api")
