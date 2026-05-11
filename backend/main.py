@@ -25,7 +25,7 @@ def create_app() -> FastAPI:
     from sqlalchemy.exc import OperationalError
 
    @app.on_event("startup")
-       async def startup_db():
+   async def startup_db():
     try:
         Base.metadata.create_all(bind=engine)
         print("Database connected and tables created")
