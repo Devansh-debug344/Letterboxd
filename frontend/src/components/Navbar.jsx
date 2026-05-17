@@ -10,27 +10,26 @@ import {
   UserPlus,
   Menu,
   X,
-  Film
+  Film,
+  Zap
 } from 'lucide-react';
+import useRazorpay from "../hooks/useRazorpay";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(window.location.pathname);
+  const { openPayment } = useRazorpay();
 
-  // Check authentication status
   useEffect(() => {
     const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
 
-  // Mock navigate function - replace with actual React Router navigate
   const navigate = (path) => {
     setActiveTab(path);
     setIsMobileMenuOpen(false);
-    // Replace with: navigate(path) from useNavigate hook
-    console.log(`Navigate to: ${path}`);
-    window.location.pathname = path; // Temporary for demo
+    window.location.pathname = path;
   };
 
   const logout = () => {
@@ -39,26 +38,17 @@ function Navbar() {
     navigate('/login');
   };
 
-import useRazorpay from "../hooks/useRazorpay";
-
-const UpgradeButton = () => {
-  const { openPayment } = useRazorpay();
-
-  const handlePay = () => {
+  const handleUpgrade = () => {
     openPayment({
       amount: 199,
       name: "Letterboxd Pro",
       description: "Monthly subscription",
       onSuccess: (res) => {
         alert("Payment done! ID: " + res.razorpay_payment_id);
-        // update UI, call backend, etc.
       },
     });
   };
 
-  return <button onClick={handlePay}>Upgrade ₹199</button>;
-};
-  
   const navItems = isLoggedIn ? [
     { path: '/', label: 'Home', icon: Home },
     { path: '/watchlist', label: 'Watchlist', icon: Bookmark },
@@ -78,10 +68,7 @@ const UpgradeButton = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      }
+      transition: { duration: 0.6, ease: "easeOut" }
     }
   };
 
@@ -89,30 +76,18 @@ const UpgradeButton = () => {
     hidden: {
       opacity: 0,
       height: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut"
-      }
+      transition: { duration: 0.3, ease: "easeInOut" }
     },
     visible: {
       opacity: 1,
       height: "auto",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut"
-      }
+      transition: { duration: 0.3, ease: "easeInOut" }
     }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, x: -20 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      transition: {
-        duration: 0.3
-      }
-    }
+    visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
   };
 
   const NavLink = ({ item, isMobile = false }) => {
@@ -171,6 +146,7 @@ const UpgradeButton = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -204,8 +180,19 @@ const UpgradeButton = () => {
             ))}
           </div>
 
-          {/* Desktop Auth */}
+          {/* Desktop Auth + Upgrade */}
           <div className="hidden md:flex items-center space-x-2">
+            {isLoggedIn && (
+              <motion.button
+                onClick={handleUpgrade}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg hover:opacity-90 transition-all duration-300"
+              >
+                <Zap className="w-4 h-4" />
+                Upgrade ₹199
+              </motion.button>
+            )}
             {authItems.map((item, index) => (
               <motion.div
                 key={item.path || item.label}
@@ -263,23 +250,17 @@ const UpgradeButton = () => {
               className="md:hidden overflow-hidden bg-slate-800/50 backdrop-blur-lg rounded-xl mt-2 mb-4 border border-white/10"
             >
               <div className="p-4 space-y-2">
-                {/* Mobile Navigation Links */}
                 {navItems.map((item, index) => (
                   <motion.div
                     key={item.path}
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: 0,
-                      transition: { delay: index * 0.1 }
-                    }}
+                    animate={{ opacity: 1, x: 0, transition: { delay: index * 0.1 } }}
                   >
                     <NavLink item={item} isMobile />
                   </motion.div>
                 ))}
-                
-                {/* Divider */}
-                {navItems.length > 0 && authItems.length > 0 && (
+
+                {navItems.length > 0 && (
                   <motion.div
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
@@ -287,17 +268,25 @@ const UpgradeButton = () => {
                     className="h-px bg-white/20 my-4"
                   />
                 )}
-                
-                {/* Mobile Auth Links */}
+
+                {/* Mobile Upgrade Button */}
+                {isLoggedIn && (
+                  <motion.button
+                    onClick={handleUpgrade}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full flex items-center gap-2 px-4 py-2 rounded-xl font-medium bg-gradient-to-r from-yellow-500 to-orange-500 text-white"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Upgrade ₹199
+                  </motion.button>
+                )}
+
                 {authItems.map((item, index) => (
                   <motion.div
                     key={item.path || item.label}
                     initial={{ opacity: 0, x: -20 }}
-                    animate={{ 
-                      opacity: 1, 
-                      x: 0,
-                      transition: { delay: (navItems.length + index + 1) * 0.1 }
-                    }}
+                    animate={{ opacity: 1, x: 0, transition: { delay: (navItems.length + index + 1) * 0.1 } }}
                   >
                     <NavLink item={item} isMobile />
                   </motion.div>
