@@ -39,6 +39,26 @@ function Navbar() {
     navigate('/login');
   };
 
+import useRazorpay from "../hooks/useRazorpay";
+
+const UpgradeButton = () => {
+  const { openPayment } = useRazorpay();
+
+  const handlePay = () => {
+    openPayment({
+      amount: 199,
+      name: "Letterboxd Pro",
+      description: "Monthly subscription",
+      onSuccess: (res) => {
+        alert("Payment done! ID: " + res.razorpay_payment_id);
+        // update UI, call backend, etc.
+      },
+    });
+  };
+
+  return <button onClick={handlePay}>Upgrade ₹199</button>;
+};
+  
   const navItems = isLoggedIn ? [
     { path: '/', label: 'Home', icon: Home },
     { path: '/watchlist', label: 'Watchlist', icon: Bookmark },
