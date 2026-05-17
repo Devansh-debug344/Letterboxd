@@ -1,7 +1,7 @@
 const useRazorpay = () => {
   const openPayment = ({ amount, name, description, onSuccess }) => {
     const options = {
-      key: "rzp_test_YOUR_KEY_HERE",
+      key: "rzp_test_SqH2aXDXqW8jTm",
       amount: amount * 100,        // convert ₹ to paise
       currency: "INR",
       name: name || "My App",
