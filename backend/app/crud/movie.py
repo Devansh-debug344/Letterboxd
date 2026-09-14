@@ -5,6 +5,46 @@ from app.models.watched import Watched
 from app.models.watchlist import WatchList
 from sqlalchemy.orm import Session
 
+def save_movie_db(response : dict , db : Session):
+    
+    existing_movie = db.query(Movie).filter(Movie.imdb_id == response.get("imdbID")).first()
+
+    if not existing_movie:
+        
+        movie = Movie(
+         imdb_id = response.get("imdbID"),
+         title = response.get("Title"),
+         year = response.get('Year'),
+         genre = response.get('Genre'),
+         poster = response.get('Poster'),
+         plot =  response.get('Plot'),
+         imdbRating = response.get('imdbRating'),
+         type = response.get('Type'),
+         awards = response.get('Awards'),
+         language = response.get('Language'),
+         runtime = response.get('Runtime'),
+         released = response.get('Released')
+        )
+
+        db.add(movie)
+        db.commit()
+        db.refresh(movie)
+
+        return movie
+
+def get_movie_by_omdb_id(id : str , db : Session):
+    movie = db.query(Movie).filter(Movie.imdb_id == f"tt{id}").first()
+    return movie
+
+def get_movie_by_title(title : str , db : Session):
+    movie = db.query(Movie).filter(Movie.title == title).first()
+    return movie
+
+
+def get_movie_by_id(id : int , db : Session):
+    movie = db.query(Movie).filter(Movie.id == id).first()
+    return movie
+
 
 def get_movie_stats(movie_id: int, db: Session) -> dict:
     review_count = db.query(func.count(Review.id)).filter(Review.movie_id == movie_id).scalar()

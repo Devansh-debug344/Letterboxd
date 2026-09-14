@@ -11,7 +11,7 @@ from sqlalchemy.exc import OperationalError
 
 def create_app():
 
-    app = FastAPI(title="Movie Booking App", version="1.0.0")
+    app = FastAPI(title="LetterBoxd", version="1.0.0")
     
     origins = ["*"]
 

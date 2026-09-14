@@ -9,7 +9,6 @@ class CreateUser(BaseModel):
 class UserOut(BaseModel):
     username : str
     email : str
-    password : str
     joined_at : datetime
 
     class Config:

@@ -11,7 +11,7 @@ class Setting(BaseSettings):
     jwt_secret : str = "mysecretKey"
     omdb_api_key : str = os.getenv("omdb_api_key")
     db_url : str = os.getenv("db_url")
-    SECRET_KEY : str = "3b023ad07e0933837077120184c2b24c6aee1551664742cce96aa537c0333b3d"
+    JWT_SECRET_TOKEN : str = os.getenv("JWT_SECRET_TOKEN")
     REDIS_URL : str = os.getenv("REDIS_URL")
     REFRESH_TOKEN_EXPIRE_DAYS : int = 7
     TWILIO_API_KEY: str = os.getenv("TWILIO_API_KEY")

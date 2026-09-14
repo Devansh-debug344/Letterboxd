@@ -19,33 +19,7 @@ def create_save_movie(movie_id : int , user_id : int , db : Session):
     return saved_movie
 
 
-def save_movie_db(response : dict , db : Session):
-    
-    existing_movie = db.query(Movie).filter(Movie.imdb_id == response.get("imdbID")).first()
 
-    if existing_movie:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST , detail="Movie already saved in db")
-
-    movie = Movie(
-         imdb_id = response.get("imdbID"),
-         title = response.get("Title"),
-         year = response.get('Year'),
-         genre = response.get('Genre'),
-         poster = response.get('Poster'),
-         plot =  response.get('Plot'),
-         imdbRating = response.get('imdbRating'),
-         type = response.get('Type'),
-         awards = response.get('Awards'),
-         language = response.get('Language'),
-         runtime = response.get('Runtime'),
-         released = response.get('Released')
-    )
-
-    db.add(movie)
-    db.commit()
-    db.refresh(movie)
-
-    return movie
 
 def update_save_movie(movie : SaveMoviesUpdate , watchlist : WatchList , db : Session):
     
@@ -58,9 +32,7 @@ def update_save_movie(movie : SaveMoviesUpdate , watchlist : WatchList , db : Se
     return watchlist
 
 
-def get_movie_by_omdb_id(id : str , db : Session):
-    movie = db.query(Movie).filter(Movie.imdb_id == f"tt{id}").first()
-    return movie
+
     
 def get_save_movie(user_id : int , db : Session):
     return db.query(WatchList).filter(WatchList.user_id ==user_id).all()

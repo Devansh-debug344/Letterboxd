@@ -6,7 +6,8 @@ from app.models.watchlist import WatchList
 from sqlalchemy.orm import Session
 from app.auth.oauth import get_current_user
 from app.db.session import get_db
-from app.crud.watchlist import create_save_movie , save_movie_db , update_save_movie , get_save_movie , get_movie_by_omdb_id , del_save_movie_by_movie_id
+from app.crud.movie import get_movie_by_omdb_id , save_movie_db , get_movie_by_id
+from app.crud.watchlist import create_save_movie  , update_save_movie , get_save_movie ,  del_save_movie_by_movie_id
 from app.services.fetch_api import fetch_movies_from_api
 from app.crud.user import get_user_by_id
 from app.schemas.movie import MoviesOut
@@ -17,7 +18,7 @@ router = APIRouter(
 )
 
 
-@router.get('/' , response_model=List[SaveMoviesOut])
+@router.get('/' , response_model=List[Union[int , List[MoviesOut]]])
 def handel_get_save_movie(current_user : User = Depends(get_current_user) , db: Session = Depends(get_db)):
     
     user = get_user_by_id(current_user.id , db)
@@ -29,12 +30,16 @@ def handel_get_save_movie(current_user : User = Depends(get_current_user) , db: 
 
     response = []
     for item in watchlist_items:
-        response.append(SaveMoviesOut(
-            movie_id=item.movie_id,
-            user_id=item.user_id
+        movie = get_movie_by_id(item.movie_id , db)
+        response.append(MoviesOut(
+           id=movie.id,
+           title=movie.title,
+           genre=movie.genre,
+           year=movie.year,
+           plot=movie.plot
         ))
     
-    return response
+    return [current_user.id , response]
 
 @router.post('/' , response_model=List[Union[SaveMoviesOut , MoviesOut]])
 async def handle_save_movie(movie_model : CreateSaveMovies , current_user : User = Depends(get_current_user) , db : Session = Depends(get_db)):
@@ -43,13 +48,15 @@ async def handle_save_movie(movie_model : CreateSaveMovies , current_user : User
 
     if not user:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST , detail = "User not found")
-    
-    response = await fetch_movies_from_api(movie_model.omdb_id)
 
-    if response.get("Response") == "False":
+    movie = get_movie_by_omdb_id(movie_model.omdb_id, db)
+    if not movie:
+        movie = await fetch_movies_from_api(movie_model.omdb_id)
+         
+    if movie.get("Response") == "False":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found from OMDB")
 
-    movie = save_movie_db(response , db)
+    movie = save_movie_db(movie , db)
  
     saved_movie = create_save_movie(movie.id , user.id , db )
 

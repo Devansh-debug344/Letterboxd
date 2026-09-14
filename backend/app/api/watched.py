@@ -4,7 +4,8 @@ from app.db.session import get_db
 from app.models.watched import Watched
 from app.models.movie import Movie
 from app.schemas.watched import WatchedCreate , WatchedOut
-from app.crud.watchlist import get_movie_by_omdb_id , save_movie_db , del_save_movie_by_movie_id
+from app.crud.watchlist import del_save_movie_by_movie_id
+from app.crud.movie import get_movie_by_omdb_id , save_movie_db 
 from app.crud.watched import get_watched_movies_by_id , add_movie_watched  , get_watched_movie , get_del_watched_movies_by_id
 from app.auth.oauth import get_current_user
 from app.services.fetch_api import fetch_movies_from_api
@@ -70,4 +71,4 @@ def remove_watched(
     if not del_movie:
         raise HTTPException(status_code=404, detail="Not in watched")
 
-    return {"detail": "Movie removed from watchlist successfully"}
+    return {"detail": "Movie removed from watched successfully"}

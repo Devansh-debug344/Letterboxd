@@ -4,7 +4,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.auth.oauth import get_current_user
 from app.schemas.review import ReviewCreate, ReviewDelete, ReviewOut, ReviewUpdate
-from app.crud.watchlist import get_movie_by_omdb_id , save_movie_db
+from app.crud.movie import get_movie_by_omdb_id , save_movie_db
 from app.services.fetch_api import fetch_movies_from_api
 from app.crud.review import (
     get_reviews_by_user,

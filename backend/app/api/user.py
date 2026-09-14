@@ -6,7 +6,7 @@ from app.crud.user import create_user , get_user_by_email , get_user_by_username
 from app.auth.oauth import get_current_user
 from app.models.user import User
 from typing import List
-from app.schemas.user import UserStats
+from app.schemas.user import UserStats , UserOut
 from app.schemas.review import ReviewOut
 from app.crud.review import to_review_out
 router = APIRouter(
@@ -14,17 +14,17 @@ router = APIRouter(
     tags=['Users']
 )
 
-@router.post("/" , response_model=CreateUser)
+@router.post("/" , response_model=UserOut)
 def create_users(user_details : CreateUser , db : Session = Depends(get_db)):
     if get_user_by_username(user_details.username , db):       
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="User with same username already existed")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT , detail="User with same username already existed. Try another username.")
     if get_user_by_email(user_details.email , db):
-         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED , detail="User already existed")
+         raise HTTPException(status_code=status.HTTP_409_CONFLICT , detail="User already existed")
     return create_user(user_details , db)
 
-@router.get("/" , response_model=List[UserOut])
-def get_users(db : Session = Depends(get_db)):
-    return get_user(db=db)
+# @router.get("/" , response_model=List[UserOut])
+# def get_users(db : Session = Depends(get_db)):
+#     return get_user(db=db)
 
 @router.get('/profile' , response_model=UserProfile)
 def get_profile(db: Session = Depends(get_db) , current_user : User = Depends(get_current_user)):

@@ -25,13 +25,13 @@ def create_access_token(data : dict):
          "exp": expire_time,
         } 
 
-     jwt_encode = jwt.encode(to_encode , setting.SECRET_KEY, ALGORITHM)
+     jwt_encode = jwt.encode(to_encode , setting.JWT_SECRET_TOKEN, ALGORITHM)
 
      return jwt_encode
 
 def verify_access_token(token : str , credentials_exception):
     try:
-        payload =  jwt.decode(token , setting.SECRET_KEY , ALGORITHM)
+        payload =  jwt.decode(token , setting.JWT_SECRET_TOKEN , ALGORITHM)
 
         user_id = payload.get("sub")
 
