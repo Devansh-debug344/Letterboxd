@@ -1,11 +1,10 @@
 from app.schemas.watchlist import CreateSaveMovies , SaveMoviesUpdate
 from sqlalchemy.orm import Session
 from fastapi import Depends , HTTPException , status
-from app.db.session import get_db
 from app.models.watchlist import WatchList
 from app.models.movie import Movie
 
-def create_save_movie(movie_id : int , user_id : int , db : Session = Depends(get_db)):
+def create_save_movie(movie_id : int , user_id : int , db : Session):
     
     existing_movie = db.query(WatchList).filter(WatchList.movie_id == movie_id).first()
 
@@ -19,7 +18,8 @@ def create_save_movie(movie_id : int , user_id : int , db : Session = Depends(ge
 
     return saved_movie
 
-def save_movie_db(response : dict , db : Session = Depends(get_db)):
+
+def save_movie_db(response : dict , db : Session):
     
     existing_movie = db.query(Movie).filter(Movie.imdb_id == response.get("imdbID")).first()
 
@@ -47,15 +47,28 @@ def save_movie_db(response : dict , db : Session = Depends(get_db)):
 
     return movie
 
-def update_save_movie(movie : SaveMoviesUpdate , watchlist : WatchList , db : Session = Depends(get_db)):
+def update_save_movie(movie : SaveMoviesUpdate , watchlist : WatchList , db : Session):
     
-    for key , value in movie.dict(exclude_unset=True).items():
+    for key , value in movie.model_dump(exclude_unset=True).items():
         setattr(watchlist , key , value)
         
     db.commit()
     db.refresh(watchlist)
 
     return watchlist
+
+
+def get_movie_by_omdb_id(id : str , db : Session):
+    movie = db.query(Movie).filter(Movie.imdb_id == f"tt{id}").first()
+    return movie
     
-def get_save_movie(user_id : int , db : Session = Depends(get_db)):
+def get_save_movie(user_id : int , db : Session):
     return db.query(WatchList).filter(WatchList.user_id ==user_id).all()
+
+
+def del_save_movie_by_movie_id(movie_id : int , user_id:int ,  db : Session):
+    movie_deleted = db.query(WatchList).filter(WatchList.user_id == user_id , WatchList.movie_id == movie_id).first()
+
+    if movie_deleted:
+     db.delete(movie_deleted)
+     db.commit()

@@ -6,10 +6,12 @@ function MovieRecommend() {
   const [page, setPage] = useState(1); // for pagination
   const [loading, setLoading] = useState(false);
 
+  const API_KEY = import.meta.env.VITE_MOVIE_API_KEY;
+
   const fetchMovies = async (pageNum) => {
     setLoading(true);
     try {
-      const res = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=3977efa4158b0d95f72a62e18c264948&page=${pageNum}`);
+      const res = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&page=${pageNum}`);
       if (res.data.Search) {
         setMovies(res.data.Search);
       } else {

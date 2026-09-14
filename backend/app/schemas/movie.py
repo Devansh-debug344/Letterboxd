@@ -8,5 +8,12 @@ class MoviesOut(BaseModel):
      plot  : str
 
      class Config:
-          orm_mode = True
+          from_attributes = True
 
+class MovieStats(BaseModel):
+    imdb_id: str
+    title: str
+    avg_rating: float | None
+    review_count: int
+    watched_count: int
+    watchlist_count: int

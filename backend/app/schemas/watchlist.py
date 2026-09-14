@@ -1,21 +1,15 @@
 from pydantic import BaseModel
 from typing import Optional
 class CreateSaveMovies(BaseModel):
-       movie_name : str
-       rating : Optional[int] = None
-       status : Optional[str] = None
-       note : Optional[str] = None
+       omdb_id : str 
 
 
 class SaveMoviesOut(BaseModel):
        movie_id : int
-       movie_name : str
-       user_name : str
-       status : Optional[str] = None
-       note : Optional[str] = None
+       user_id : int
 
        class Config:
-              orm_mode = True
+              from_attributes = True
 
 class SaveMoviesUpdate(BaseModel):
        movie_name : str

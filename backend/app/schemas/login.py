@@ -12,3 +12,6 @@ class Token(BaseModel):
 
 class DataToken(BaseModel):
     id : Optional[int] = None
+
+class LogoutResponse(BaseModel):
+    message: str

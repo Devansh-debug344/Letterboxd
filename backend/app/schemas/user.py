@@ -21,8 +21,16 @@ class UserProfile(BaseModel):
     joined_at : datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserUpdate(BaseModel):
     username : Optional[str] = None
     email : Optional[str] = None
+
+class UserStats(BaseModel):
+    user_id: int
+    watched: int
+    reviews: int
+    watchlist: int
+    avg_rating: float | None
+

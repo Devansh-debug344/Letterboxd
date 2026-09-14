@@ -26,6 +26,7 @@ function SearchMovies({ token }) {
   const [message, setMessage] = useState(null);
   const [expandedReviews, setExpandedReviews] = useState({});
 
+  const API_KEY = import.meta.env.VITE_MOVIE_API_KEY;
   // Search TMDb API (fixed)
   const searchMovies = async () => {
     if (!query.trim()) return;
@@ -34,7 +35,7 @@ function SearchMovies({ token }) {
     setMessage(null);
     
     try {
-      const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=3977efa4158b0d95f72a62e18c264948&query=${encodeURIComponent(query)}`);
+      const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}`);
       const data = await res.json();
       
       if (data.results && data.results.length > 0) {

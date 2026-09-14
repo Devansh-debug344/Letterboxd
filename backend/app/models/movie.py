@@ -12,7 +12,7 @@ class Movie(Base):
     genre = Column(String)
     poster = Column(String)
     plot = Column(String)
-    imdbRating = Column(Float)
+    imdbRating = Column(String)
     type = Column(String)
     awards = Column(String)
     language = Column(String)
@@ -20,4 +20,5 @@ class Movie(Base):
     released = Column(String)
 
     watchlisted_by = relationship("WatchList", back_populates="movie")
-    review_by = relationship('Review' , back_populates='movie')
+    review = relationship('Review' , back_populates='movie')
+    watched_items = relationship('Watched' , back_populates='movie')
