@@ -18,10 +18,10 @@ async def search_movies(search: str = Query(..., min_length=2) , db : Session = 
     
     data = await fetch_movies_from_api_by_search(search)
 
-    save_movie_db(data , db)
 
     if not data or data.get("Response") == "False":
         raise HTTPException(status_code=404, detail="Movie not found")
+
     return data.get("Search", [])
 
 
@@ -30,8 +30,6 @@ def handle_movie_stats(omdb_id: str, db: Session = Depends(get_db)):
     movie = get_movie_by_omdb_id(omdb_id, db)
     if not movie:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
-
-    save_movie_db(movie , db)
 
     stats = get_movie_stats(movie.id, db)
     return {
@@ -49,10 +47,9 @@ async def get_movie(omdb_id: str, db: Session = Depends(get_db)):
 
     data = await fetch_movies_from_api(omdb_id)
 
-    save_movie_db(movie , db)
-          
     if not data or data.get("Response") == "False":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found")
+
+    save_movie_db(data , db)
+          
     return data
-
-

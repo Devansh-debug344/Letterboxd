@@ -31,9 +31,10 @@ def save_movie_db(response : dict , db : Session):
         db.refresh(movie)
 
         return movie
+    return existing_movie
 
 def get_movie_by_omdb_id(id : str , db : Session):
-    movie = db.query(Movie).filter(Movie.imdb_id == f"tt{id}").first()
+    movie = db.query(Movie).filter(Movie.imdb_id == id).first()
     return movie
 
 def get_movie_by_title(title : str , db : Session):

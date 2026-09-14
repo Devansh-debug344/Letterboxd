@@ -38,4 +38,4 @@ def add_movie_watched(user_id : int , movie_id : int , rating : float | None = N
     return item
 
 def get_watched_movie(user_id : int , db : Session):
-    return  db.query(Watched).filter(Watched.user_id == user_id).order_by(Watched.watched_at.desc()).all()
+    return db.query(Watched).filter(Watched.user_id == user_id).order_by(Watched.watched_at.desc()).all()

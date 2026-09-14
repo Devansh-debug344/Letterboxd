@@ -19,4 +19,4 @@ class Watched(Base):
 
     __table_args__ = (
         UniqueConstraint("user_id", "movie_id", name="uq_watched_user_movie"),
-    ) #one user can wathced one movie one time 
+    )  

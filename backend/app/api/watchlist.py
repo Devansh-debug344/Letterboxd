@@ -17,8 +17,7 @@ router = APIRouter(
     tags=['Watchlist']
 )
 
-
-@router.get('/' , response_model=List[Union[int , List[MoviesOut]]])
+@router.get('/' , response_model=dict)
 def handel_get_save_movie(current_user : User = Depends(get_current_user) , db: Session = Depends(get_db)):
     
     user = get_user_by_id(current_user.id , db)
@@ -39,7 +38,7 @@ def handel_get_save_movie(current_user : User = Depends(get_current_user) , db: 
            plot=movie.plot
         ))
     
-    return [current_user.id , response]
+    return {"user_id" : current_user.id , "response" : response}
 
 @router.post('/' , response_model=List[Union[SaveMoviesOut , MoviesOut]])
 async def handle_save_movie(movie_model : CreateSaveMovies , current_user : User = Depends(get_current_user) , db : Session = Depends(get_db)):
@@ -53,10 +52,10 @@ async def handle_save_movie(movie_model : CreateSaveMovies , current_user : User
     if not movie:
         movie = await fetch_movies_from_api(movie_model.omdb_id)
          
-    if movie.get("Response") == "False":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found from OMDB")
+        if movie.get("Response") == "False":
+          raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found from OMDB")
 
-    movie = save_movie_db(movie , db)
+        movie = save_movie_db(movie , db)
  
     saved_movie = create_save_movie(movie.id , user.id , db )
 

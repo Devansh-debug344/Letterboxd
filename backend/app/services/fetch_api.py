@@ -2,9 +2,14 @@
 from app.config import setting
 import httpx
 from urllib.parse import quote
+
+def normalize_id(id : str):
+    id = id.strip()
+    return id if id.startswith("tt") else f"tt{id}"
+
 async def fetch_movies_from_api(id : str):
 
-    url = f"https://www.omdbapi.com/?i=tt{id}&apikey={setting.omdb_api_key}"
+    url = f"https://www.omdbapi.com/?i={normalize_id(id)}&apikey={setting.omdb_api_key}"
 
     async with httpx.AsyncClient() as client:
         response = await client.get(url)

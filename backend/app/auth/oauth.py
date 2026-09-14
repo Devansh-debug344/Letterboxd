@@ -35,7 +35,7 @@ def verify_access_token(token : str , credentials_exception):
 
         user_id = payload.get("sub")
 
-        if not id:
+        if not user_id:
             raise credentials_exception
         data_token = DataToken(id=int(user_id))
 
