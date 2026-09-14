@@ -7,8 +7,6 @@ load_dotenv()
 from pydantic_settings import BaseSettings
 
 class Setting(BaseSettings):
-    app_name : str = "Movie Booking App"
-    jwt_secret : str = "mysecretKey"
     omdb_api_key : str = os.getenv("omdb_api_key")
     db_url : str = os.getenv("db_url")
     JWT_SECRET_TOKEN : str = os.getenv("JWT_SECRET_TOKEN")
