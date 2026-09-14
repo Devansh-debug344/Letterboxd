@@ -1,0 +1,11 @@
+export type Movie = { imdb_id?: string; imdbID?: string; id?: number; title?: string; Title?: string; year?: string | number; Year?: string; genre?: string; Genre?: string; plot?: string; Plot?: string; poster?: string; Poster?: string; imdbRating?: string; Type?: string };
+export type MovieStats = { imdb_id: string; title: string; avg_rating: number | null; review_count: number; watched_count: number; watchlist_count: number };
+export type Review = { id: number; movie_id: number; user_id: number; movie_name: string; user_name: string; rating: number; review: string | null; spoiler?: boolean; likes: number; updated_at: string };
+export type UserProfile = { username: string; email: string; joined_at: string };
+export type UserStats = { user_id: number; watched: number; reviews: number; watchlist: number; avg_rating: number | null };
+export type WatchlistResponse = { user_id: number; response: Array<{ id: number; title: string; genre: string; year: number | string; plot: string }> };
+export type WatchedItem = { id: number; movie_id?: number; omdb_id?: string; title?: string; year?: number; poster?: string; rating?: number | null; watched_at?: string };
+export const movieId = (m: Movie) => m.imdb_id || m.imdbID || '';
+export const movieTitle = (m: Movie) => m.title || m.Title || 'Untitled film';
+export const movieYear = (m: Movie) => m.year || m.Year || '—';
+export const moviePoster = (m: Movie) => { const p = m.poster || m.Poster; return p && p !== 'N/A' ? p : undefined; };

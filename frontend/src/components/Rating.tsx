@@ -1,0 +1,3 @@
+import { Star } from 'lucide-react';
+export function RatingPicker({ value, onChange }: { value: number; onChange: (value: number) => void }) { return <div className="rating-picker" aria-label="Your rating">{[1,2,3,4,5].map((n) => <button type="button" key={n} onClick={() => onChange(value === n ? n - .5 : n)} aria-label={`${n} stars`}><Star fill={value >= n ? 'currentColor' : 'none'} />{value === n - .5 && <i />}</button>)}<b>{value.toFixed(1)}</b></div>; }
+export function Stars({ value }: { value: number }) { return <span className="stars"><Star size={15} fill="currentColor" /> {value.toFixed(1)}</span>; }
