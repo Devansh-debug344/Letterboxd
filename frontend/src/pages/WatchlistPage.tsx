@@ -1,3 +1,74 @@
-import { useQueries, useQuery } from '@tanstack/react-query'; import { Link } from 'react-router-dom'; import { getWatchlist } from '../api/library'; import { getMovie } from '../api/movies'; import { PosterCard, PosterSkeleton } from '../components/PosterCard';
-export function WatchlistPage(){const list=useQuery({queryKey:['watchlist'],queryFn:getWatchlist}); const details=useQueries({queries:(list.data?.response||[]).map(x=>({queryKey:['movie-by-db-title',x.id],queryFn:()=>getMovieFromTitle(x.title)}))}); return <section className="page"><div className="page-intro"><p className="eyebrow">WATCHLIST</p><h1>Waiting in the wings</h1><p className="lede">Films you’ve saved for the right night.</p></div>{list.isLoading?<div className="poster-grid">{Array.from({length:8},(_,i)=><PosterSkeleton key={i}/>)}</div>:list.data?.response.length?<div className="poster-grid">{details.map((item,i)=>item.data?<PosterCard key={list.data!.response[i].id} movie={item.data}/>:<div className="watch-tile large" key={list.data!.response[i].id}><b>{list.data!.response[i].title}</b><span>{list.data!.response[i].year}<br/>{list.data!.response[i].genre}</span></div>)}</div>:<div className="empty">Your watchlist is ready when you are. <Link to="/search">Find something to watch</Link></div>}</section>}
-async function getMovieFromTitle(title:string){const { searchMovies }=await import('../api/movies');const result=await searchMovies(title);return result.find(m=>(m.Title||m.title)?.toLowerCase()===title.toLowerCase())||result[0];}
+import { useMemo, useState } from 'react';
+import { useQueries, useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { getWatchlist } from '../api/library';
+import { searchMovies } from '../api/movies';
+import { movieId } from '../api/types';
+import { PosterCard, PosterSkeleton } from '../components/PosterCard';
+
+type SortKey = 'added' | 'title' | 'year';
+
+export function WatchlistPage() {
+  const [sort, setSort] = useState<SortKey>('added');
+  const list = useQuery({ queryKey: ['watchlist'], queryFn: getWatchlist });
+
+  const sorted = useMemo(() => {
+    const rows = [...(list.data?.response ?? [])];
+    if (sort === 'title') rows.sort((a, b) => a.title.localeCompare(b.title));
+    if (sort === 'year') rows.sort((a, b) => Number(b.year) - Number(a.year));
+    return rows;
+  }, [list.data, sort]);
+
+  const details = useQueries({
+    queries: sorted.map((x) => ({
+      queryKey: ['movie-by-db-title', x.id, x.title],
+      queryFn: () => getMovieFromTitle(x.title),
+    })),
+  });
+
+  return (
+    <section className="page">
+      <div className="page-intro">
+        <p className="eyebrow">Watchlist</p>
+        <h1>Films to watch</h1>
+        <p className="lede">Everything you&apos;ve saved for later—sort and browse your queue.</p>
+      </div>
+
+      {list.data?.response.length ? (
+        <div className="filter-bar">
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort watchlist">
+            <option value="added">Date added</option>
+            <option value="title">Title</option>
+            <option value="year">Year</option>
+          </select>
+        </div>
+      ) : null}
+
+      {list.isLoading ? (
+        <div className="poster-grid">{Array.from({ length: 8 }, (_, i) => <PosterSkeleton key={i} />)}</div>
+      ) : list.data?.response.length ? (
+        <div className="poster-grid">
+          {details.map((item, i) =>
+            item.data ? (
+              <PosterCard key={sorted[i].id} movie={item.data} />
+            ) : (
+              <div className="watch-tile large" key={sorted[i].id}>
+                <b>{sorted[i].title}</b>
+                <span>{sorted[i].year}<br />{sorted[i].genre}</span>
+              </div>
+            ),
+          )}
+        </div>
+      ) : (
+        <div className="empty">
+          Your watchlist is empty. <Link to="/search">Find something to watch</Link>
+        </div>
+      )}
+    </section>
+  );
+}
+
+async function getMovieFromTitle(title: string) {
+  const result = await searchMovies(title);
+  return result.find((m) => (m.Title || m.title)?.toLowerCase() === title.toLowerCase()) || result[0];
+}
