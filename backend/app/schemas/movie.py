@@ -1,11 +1,14 @@
 from pydantic import BaseModel
+from typing import Optional
 # title, description, genre, release year, image URL
 class MoviesOut(BaseModel):
      id : int
+     imdb_id: Optional[str] = None
      title : str
      genre : str
      year : int
      plot  : str
+     poster: Optional[str] = None
 
      class Config:
           from_attributes = True

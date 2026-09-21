@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
+from app.db.upsert import insert_ignore
 from app.models.review import Review
 from app.models.movie import Movie
 from app.schemas.review import ReviewCreate, ReviewUpdate
@@ -26,21 +26,19 @@ def get_reviews_by_user(user_id: int, db: Session, skip : int , limit : int , mo
 
 
 def create_review(user_id: int, movie_id: int, data: ReviewCreate, db: Session) -> Review:
-    item = Review(
+    statement = insert_ignore(
+        db,
+        Review,
+        "uq_review_user_movie",
         user_id=user_id,
         movie_id=movie_id,
         rating=data.rating,
         review=data.review,
         spoiler=data.spoiler,
     )
-    db.add(item)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Review already exists")
-    db.refresh(item)
-    return item
+    db.execute(statement)
+    db.commit()
+    return get_review_by_user_movie(user_id, movie_id, db)
 
 
 def update_review(user_id: int, movie_id: int, data: ReviewUpdate, db: Session) -> Review:
@@ -63,7 +61,7 @@ def update_review(user_id: int, movie_id: int, data: ReviewUpdate, db: Session) 
 def delete_review(user_id: int, movie_id: int, db: Session) -> None:
     item = get_review_by_user_movie(user_id, movie_id, db)
     if not item:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found")
+        return
     db.delete(item)
     db.commit()
 

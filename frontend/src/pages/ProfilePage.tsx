@@ -8,6 +8,7 @@ import { getProfile, getUserReviews, getUserStats } from '../api/users';
 import { movieId } from '../api/types';
 import { PosterCard, PosterSkeleton } from '../components/PosterCard';
 import { ReviewCard } from '../components/ReviewCard';
+import { RatingDisplay } from '../components/RatingDisplay';
 
 type Tab = 'watched' | 'watchlist' | 'reviews' | 'stats';
 
@@ -79,7 +80,7 @@ export function ProfilePage() {
       {s && (
         <div className="profile-stats">
           <span><b>{s.watched}</b> movies watched</span>
-          <span><b>{s.avg_rating?.toFixed(1) ?? '—'}</b> avg rating</span>
+          <span><b>{s.avg_rating != null ? <RatingDisplay value={s.avg_rating} scale={5} /> : '—'}</b> avg rating</span>
           <span><b>{s.reviews}</b> reviews</span>
           <span><b>{'watchlist' in s ? s.watchlist : '—'}</b> watchlist</span>
         </div>
@@ -191,7 +192,7 @@ function WatchedGrid({ items }: { items: Array<{ title?: string; movie_id?: numb
   return (
     <div className="poster-grid">
       {posters.data?.map(({ movie, rating }, i) =>
-        movie ? <PosterCard key={movieId(movie) || i} movie={movie} rating={rating ?? undefined} /> : null,
+        movie ? <PosterCard key={movieId(movie) || i} movie={movie} rating={rating ?? undefined} ratingScale={5} /> : null,
       )}
     </div>
   );

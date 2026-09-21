@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Search, X } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { searchMovies } from '../api/movies';
 import { getWatchlist, getWatched } from '../api/library';
-import { movieId, movieTitle, movieYear } from '../api/types';
+import { movieId, moviePoster, movieTitle, movieYear } from '../api/types';
 import { PosterCard, PosterSkeleton } from '../components/PosterCard';
 import { useAuthStore } from '../stores/auth';
 
@@ -14,16 +14,36 @@ export function SearchPage() {
   const [params, setParams] = useSearchParams();
   const initial = params.get('q') ?? '';
   const [term, setTerm] = useState(initial);
+  const [debouncedTerm, setDebouncedTerm] = useState(initial);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [genre, setGenre] = useState('');
   const [yearMin, setYearMin] = useState('');
   const [sort, setSort] = useState<SortKey>('relevance');
   const signedIn = useAuthStore((s) => !!s.accessToken);
 
   const { data, isFetching, isError } = useQuery({
-    queryKey: ['search', term],
-    queryFn: () => searchMovies(term),
-    enabled: term.trim().length >= 2,
+    queryKey: ['search', debouncedTerm],
+    queryFn: () => searchMovies(debouncedTerm),
+    enabled: debouncedTerm.trim().length >= 2,
   });
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedTerm(term.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [term]);
+
+  useEffect(() => {
+    const close = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) setSuggestionsOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSuggestionsOpen(false); };
+    document.addEventListener('mousedown', close);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', close); document.removeEventListener('keydown', escape); };
+  }, []);
+
+  const closeSuggestions = () => setSuggestionsOpen(false);
 
   const watchlist = useQuery({ queryKey: ['watchlist'], queryFn: getWatchlist, enabled: signedIn });
   const watched = useQuery({ queryKey: ['watched'], queryFn: getWatched, enabled: signedIn });
@@ -50,6 +70,7 @@ export function SearchPage() {
 
   const onTermChange = (value: string) => {
     setTerm(value);
+    setSuggestionsOpen(true);
     if (value.trim().length >= 2) {
       setParams({ q: value.trim() });
     } else {
@@ -63,14 +84,24 @@ export function SearchPage() {
         <p className="eyebrow">Discover</p>
         <h1>Search results</h1>
       </div>
-      <div className="searchbox">
-        <Search aria-hidden />
-        <input
-          autoFocus
-          value={term}
-          onChange={(e) => onTermChange(e.target.value)}
-          placeholder="Search by title or director…"
-        />
+      <div className="home-search" ref={searchRef}>
+        <div className="searchbox stream-search">
+          <Search aria-hidden />
+          <input autoFocus value={term} onFocus={() => { setDebouncedTerm(term.trim()); setSuggestionsOpen(true); }} onChange={(e) => onTermChange(e.target.value)} placeholder="Search by title or director…" aria-label="Search films" aria-expanded={suggestionsOpen && !!data?.length} aria-controls="search-suggestions" />
+          {term && <button type="button" className="search-clear" onClick={() => { setTerm(''); setDebouncedTerm(''); setSuggestionsOpen(false); setParams({}); }} aria-label="Clear search"><X size={17}/></button>}
+        </div>
+        {suggestionsOpen && debouncedTerm.length >= 2 && data?.length && (
+          <div id="search-suggestions" className="movie-suggestions search-page-suggestions" role="listbox" aria-label="Movie suggestions">
+            {data.slice(0, 5).map((movie) => {
+              const id = movieId(movie); const poster = moviePoster(movie);
+              if (!id) return null;
+              return <Link key={id} to={`/film/${id}`} className="movie-suggestion" role="option" onClick={closeSuggestions}>
+                {poster ? <img src={poster} alt="" width="32" height="48" loading="lazy" decoding="async" /> : <span className="suggestion-poster-placeholder" />}
+                <span><strong>{movieTitle(movie)}</strong><small>{movieYear(movie)}</small></span>
+              </Link>;
+            })}
+          </div>
+        )}
       </div>
 
       {term.trim().length >= 2 && (
@@ -98,7 +129,7 @@ export function SearchPage() {
             const seen = watchedTitles.has(titleKey);
             return (
               <div key={id || movieTitle(m)} className="search-card-wrap">
-                <PosterCard movie={m} rating={m.imdbRating ? Number(m.imdbRating) : undefined} />
+                <PosterCard movie={m} rating={m.imdbRating ? Number(m.imdbRating) : undefined} ratingScale={10} />
                 {signedIn && (onWatchlist || seen) && (
                   <p className="hint" style={{ marginTop: 6, fontSize: 11 }}>
                     {onWatchlist && 'On watchlist'}

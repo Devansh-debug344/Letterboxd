@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Eye, Heart, Pencil, Star, Trash2 } from 'lucide-react';
+import { Eye, Heart, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Review } from '../api/types';
+import { useToast } from './Toast';
+import { RatingDisplay } from './RatingDisplay';
 
 type Props = {
   review: Review;
@@ -13,6 +15,7 @@ type Props = {
 
 export function ReviewCard({ review, showLikes = false, canEdit, onDelete, filmPath }: Props) {
   const [shown, setShown] = useState(!review.spoiler);
+  const toast = useToast();
 
   return (
     <article className="review-card">
@@ -26,11 +29,11 @@ export function ReviewCard({ review, showLikes = false, canEdit, onDelete, filmP
           <small>{new Date(review.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</small>
         </div>
         <span className="score">
-          <Star size={14} fill="currentColor" /> {review.rating.toFixed(1)}
+          <RatingDisplay value={review.rating} scale={5} />
         </span>
       </div>
       {review.spoiler && !shown ? (
-        <button type="button" className="spoiler" onClick={() => setShown(true)}>
+        <button type="button" className="spoiler" onClick={() => { setShown(true); toast('Spoiler revealed.'); }}>
           <Eye size={16} /> Contains spoilers — show review
         </button>
       ) : (
