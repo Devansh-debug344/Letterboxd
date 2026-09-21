@@ -1,5 +1,6 @@
 from fastapi import APIRouter , Depends , HTTPException , status , Query
 from app.schemas.user import CreateUser , UserOut , UserProfile , UserUpdate
+from app.schemas.login import DataToken
 from sqlalchemy.orm import Session
 from app.db.session import get_db 
 from app.crud.user import create_user , get_user_by_email , get_user_by_username , get_user , get_user_profile , update_user , get_user_by_id, get_user_stats, get_public_reviews_by_user
@@ -27,11 +28,11 @@ def create_users(user_details : CreateUser , db : Session = Depends(get_db)):
 #     return get_user(db=db)
 
 @router.get('/profile' , response_model=UserProfile)
-def get_profile(db: Session = Depends(get_db) , current_user : User = Depends(get_current_user)):
+def get_profile(db: Session = Depends(get_db), current_user: DataToken = Depends(get_current_user)):
     return get_user_profile(current_user.id , db )
 
 @router.patch('/profile' , response_model=UserUpdate)
-def handle_update_user(user_details : UserUpdate , db : Session = Depends(get_db) , current_user : User = Depends(get_current_user)):
+def handle_update_user(user_details: UserUpdate, db: Session = Depends(get_db), current_user: DataToken = Depends(get_current_user)):
     user = db.query(User).filter(User.id == current_user.id).first()
     
     if not user: 

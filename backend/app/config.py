@@ -1,13 +1,10 @@
 from dotenv import load_dotenv
 import os
-from dataclasses import dataclass
 load_dotenv()
-
-
 from pydantic_settings import BaseSettings
 
 class Setting(BaseSettings):
-    omdb_api_key : str = os.getenv("omdb_api_key")
+    tmdb_api_key : str = os.getenv("tmdb_api_key")
     db_url : str = os.getenv("db_url")
     JWT_SECRET_TOKEN : str = os.getenv("JWT_SECRET_TOKEN")
     REDIS_URL : str = os.getenv("REDIS_URL")
@@ -16,9 +13,12 @@ class Setting(BaseSettings):
     TWILIO_ACCOUNT_SID: str =  os.getenv("TWILIO_ACCOUNT_SID")
     TWILIO_API_SECRET : str = os.getenv("TWILIO_API_SECRET")
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
-    class Config:
-        env_file = ".env"
+
+    # class Config:
+    #     env_file = ".env"
+
 setting = Setting()
+
 
 # @dataclass
 # class Setting:

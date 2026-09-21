@@ -10,7 +10,7 @@ class WatchedCreate(BaseModel):
 
 class WatchedOut(BaseModel):
     id: int
-    omdb_id: int
+    omdb_id: str
     title: str
     year: int | None
     poster: str | None

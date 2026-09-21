@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.models.user import User
+from app.db.session import get_db, run_db
+from app.schemas.login import DataToken
 from app.auth.oauth import get_current_user
 from app.schemas.review import ReviewCreate, ReviewDelete, ReviewOut, ReviewUpdate
 from app.crud.movie import get_movie_by_omdb_id , save_movie_db
@@ -21,10 +21,10 @@ router = APIRouter(prefix="/review", tags=["Reviews"])
 @router.post("/", response_model=ReviewOut, status_code=status.HTTP_201_CREATED)
 async def handle_create_review(
     body: ReviewCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: DataToken = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    movie = get_movie_by_omdb_id(body.omdb_id, db) 
+    movie = await run_db(get_movie_by_omdb_id, body.omdb_id, db)
     
     if not movie:
         response = await fetch_movies_from_api(body.omdb_id)
@@ -32,16 +32,16 @@ async def handle_create_review(
         if response.get("Response") == "False":
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Movie not found from OMDB")
          
-        movie = save_movie_db(response , db)
+        movie = await run_db(save_movie_db, response, db)
 
-    item = create_review(current_user.id, movie.id, body, db)
-    return to_review_out(item)
+    item = await run_db(create_review, current_user.id, movie.id, body, db)
+    return await run_db(to_review_out, item)
 
 
 @router.patch("/", response_model=ReviewOut)
 def handle_update_review(
     body: ReviewUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: DataToken = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     movie = get_movie_by_omdb_id(body.omdb_id, db)
@@ -57,7 +57,7 @@ def handle_get_review(
     db: Session = Depends(get_db),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=50),
-    current_user: User = Depends(get_current_user),
+    current_user: DataToken = Depends(get_current_user),
 ):
     movie_id = None
     if omdb_id:
@@ -73,12 +73,12 @@ def handle_get_review(
 @router.delete("/")
 def handle_delete_review(
     body: ReviewDelete,
-    current_user: User = Depends(get_current_user),
+    current_user: DataToken = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     movie = get_movie_by_omdb_id(body.omdb_id, db)
     if not movie:
-        raise HTTPException(status_code=404, detail="Movie not found")
+        return {"detail": "Review was not present"}
     delete_review(current_user.id, movie.id, db)
 
     return {"detail": "Review deleted"}

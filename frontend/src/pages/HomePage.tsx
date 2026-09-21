@@ -3,73 +3,72 @@ import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getWatchlist } from '../api/library';
 import { getMovieReviews } from '../api/reviews';
-import { searchMovies } from '../api/movies';
+import { getMovieCollection, searchMovies } from '../api/movies';
 import { movieId } from '../api/types';
 import { HomeSearchBar } from '../components/HomeSearchBar';
 import { PosterCard, PosterSkeleton } from '../components/PosterCard';
 import { ReviewCard } from '../components/ReviewCard';
 
-const TRENDING = ['Oppenheimer', 'Dune', 'Parasite', 'Everything Everywhere All at Once', 'The Batman'];
-const POPULAR = [
-  'Inception', 'Interstellar', 'The Godfather', 'Pulp Fiction', 'Fight Club',
-  'The Dark Knight', 'Forrest Gump', 'Gladiator', 'Whiplash', 'La La Land',
-  'Mad Max: Fury Road', 'Get Out', 'Arrival', 'Moonlight', 'Nomadland',
-  'The Matrix', 'Goodfellas', 'Spirited Away', 'There Will Be Blood', 'Her',
-];
+const FALLBACK_TRENDING = ['Oppenheimer', 'Dune', 'Parasite', 'The Batman', 'Everything Everywhere All at Once'];
+const FALLBACK_POPULAR = ['Inception', 'Interstellar', 'The Godfather', 'Pulp Fiction', 'Fight Club', 'The Dark Knight', 'Forrest Gump', 'Gladiator', 'Whiplash', 'La La Land'];
+
+async function fallbackCollection(titles: string[], page = 1) {
+  const slice = titles.slice((page - 1) * 5, page * 5);
+  const items = (await Promise.allSettled(slice.map(async (title) => (await searchMovies(title))[0])))
+    .flatMap((result) => result.status === 'fulfilled' && result.value ? [result.value] : []);
+  return { items, next: page * 5 < titles.length ? page + 1 : undefined };
+}
 
 export function HomePage() {
   const trending = useQuery({
     queryKey: ['trending'],
-    queryFn: async () => {
-      const results = await Promise.all(TRENDING.map(async (title) => (await searchMovies(title))[0]));
-      return results.filter(Boolean);
-    },
+    // The collection endpoint is fast, while this fallback keeps the feed
+    // usable with an older deployed backend during a rolling deployment.
+    queryFn: () => getMovieCollection('trending').catch(() => fallbackCollection(FALLBACK_TRENDING)),
   });
 
   const popular = useInfiniteQuery({
     queryKey: ['popular-grid'],
-    queryFn: async ({ pageParam = 0 }) => {
-      const slice = POPULAR.slice(pageParam, pageParam + 5);
-      const results = await Promise.all(slice.map(async (title) => (await searchMovies(title))[0]));
-      return { items: results.filter(Boolean), next: pageParam + 5 < POPULAR.length ? pageParam + 5 : undefined };
-    },
-    initialPageParam: 0,
+    queryFn: ({ pageParam = 1 }) => getMovieCollection('popular', pageParam).catch(() => fallbackCollection(FALLBACK_POPULAR, pageParam)),
+    initialPageParam: 1,
     getNextPageParam: (last) => last.next,
   });
 
   const watchlist = useQuery({ queryKey: ['watchlist'], queryFn: getWatchlist });
 
   const communityReviews = useQuery({
-    queryKey: ['community-reviews', trending.data?.map((m) => movieId(m)).join(',')],
-    enabled: !!trending.data?.length,
+    queryKey: ['community-reviews', trending.data?.items.map(movieId).join(',')],
+    enabled: !!trending.data?.items.length,
     queryFn: async () => {
-      const ids = trending.data!.map(movieId).filter(Boolean).slice(0, 4);
+      const ids = trending.data!.items.map(movieId).filter(Boolean).slice(0, 4);
       const batches = await Promise.all(ids.map((id) => getMovieReviews(id).catch(() => [])));
       return batches.flat().sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 6);
     },
   });
 
-  const popularFlat = popular.data?.pages.flatMap((p) => p.items) ?? [];
+  const popularFlat = (popular.data?.pages.flatMap((p) => p.items) ?? []).filter((movie, index, movies) =>
+    movies.findIndex((candidate) => movieId(candidate) === movieId(movie)) === index,
+  );
 
   return (
     <section className="page home">
-      <div className="page-intro">
-        <p className="eyebrow">Discovery</p>
-        <h1>What are you watching?</h1>
-        <p className="lede">Find films, track your watchlist, and read what others thought.</p>
+      <div className="page-intro home-masthead">
+        <p className="eyebrow">Film diary · community · discovery</p>
+        <h1>Find your next<br/>great film.</h1>
+        <p className="lede">Log what you watch, build your watchlist and follow the conversation around cinema.</p>
         <HomeSearchBar />
       </div>
 
       <Section title="Trending now" to="/search">
         {trending.isLoading
           ? Array.from({ length: 5 }, (_, i) => <PosterSkeleton key={i} />)
-          : trending.data?.map((m) => <PosterCard key={movieId(m)} movie={m} />)}
+          : trending.data?.items.slice(0, 6).map((m) => <PosterCard key={movieId(m)} movie={m} priority />)}
       </Section>
 
       <Section title="Popular on watchlists" to="/watchlist">
         {trending.isLoading
           ? Array.from({ length: 4 }, (_, i) => <PosterSkeleton key={i} />)
-          : trending.data?.slice(0, 4).map((m) => <PosterCard key={`wl-${movieId(m)}`} movie={m} />)}
+          : trending.data?.items.slice(6, 10).map((m) => <PosterCard key={`wl-${movieId(m)}`} movie={m} />)}
       </Section>
 
       <section className="home-reviews">
@@ -88,10 +87,7 @@ export function HomePage() {
       <Section title="Your watchlist" to="/watchlist">
         {watchlist.data?.response.length
           ? watchlist.data.response.slice(0, 6).map((m) => (
-            <div className="watch-tile" key={m.id}>
-              <b>{m.title}</b>
-              <span>{m.year} · {m.genre}</span>
-            </div>
+            <PosterCard key={m.id} movie={{ imdb_id: m.imdb_id, title: m.title, year: m.year, poster: m.poster }} />
           ))
           : (
             <div className="empty inline">
@@ -108,10 +104,11 @@ export function HomePage() {
           ? Array.from({ length: 10 }, (_, i) => <PosterSkeleton key={i} />)
           : popularFlat.map((m) => <PosterCard key={movieId(m)} movie={m} />)}
       </div>
+      {popular.isError && <p className="hint load-error">Couldn&apos;t load that page. Please try again.</p>}
       {popular.hasNextPage && (
         <div className="load-more-wrap">
           <button type="button" className="button ghost" disabled={popular.isFetchingNextPage} onClick={() => popular.fetchNextPage()}>
-            {popular.isFetchingNextPage ? 'Loading…' : 'Load more'}
+            {popular.isFetchingNextPage ? 'Loading…' : 'Load more films'}
           </button>
         </div>
       )}

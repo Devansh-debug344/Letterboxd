@@ -13,7 +13,8 @@ from app.models.movie import Movie
 from app.models.watched import Watched
 from app.models.review import Review
 import os 
-
+from dotenv import load_dotenv
+load_dotenv()
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -22,7 +23,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-db_url = os.environ.get("db_url")
+db_url = os.getenv("db_url")
 if not db_url:
     raise ValueError("DATABASE_URL environment variable is not set!")
 config.set_main_option("sqlalchemy.url" , db_url)

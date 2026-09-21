@@ -1,6 +1,6 @@
 from app.db.base import Base
 from datetime import datetime , timezone
-from sqlalchemy import Column , String , Integer, DateTime , ForeignKey ,  Float 
+from sqlalchemy import Column , String , Integer, DateTime , ForeignKey ,  Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 # title, description, genre, release year, image URL
@@ -15,3 +15,5 @@ class WatchList(Base):
 
     user = relationship('User' , back_populates = 'watchlists')
     movie = relationship('Movie' , back_populates = 'watchlisted_by')
+
+    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uq_watchlist_user_movie'),)

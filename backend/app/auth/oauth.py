@@ -3,11 +3,6 @@ from app.schemas.login import DataToken
 from jose import jwt , JWTError
 from datetime import datetime , timezone , timedelta
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-from app.db.session import get_db
-from app.models.user import User
-from app.crud.user import get_user_by_id
-from app.services.token_blacklist import token_blacklist
 TOKEN_EXPIRE_TIME = 50
 
 from app.config import setting
@@ -37,14 +32,17 @@ def verify_access_token(token : str , credentials_exception):
 
         if not user_id:
             raise credentials_exception
-        data_token = DataToken(id=int(user_id))
+        try:
+            data_token = DataToken(id=int(user_id))
+        except (TypeError, ValueError):
+            raise credentials_exception
 
     except JWTError as e:
         print(e)
         raise credentials_exception
     return data_token 
 
-def get_current_user(token : str = Depends(oath2_schema), db : Session = Depends(get_db)):
+def get_current_user(token : str = Depends(oath2_schema)) -> DataToken:
     credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,detail="Could not Validate Credentials",headers={"WWW-Authenticate": "Bearer"})
 
 
@@ -56,6 +54,4 @@ def get_current_user(token : str = Depends(oath2_schema), db : Session = Depends
 
     token = verify_access_token(token , credentials_exception)
 
-    user = get_user_by_id(token.id , db)
-
-    return user
+    return token

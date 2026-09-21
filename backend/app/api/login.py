@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.login import Token , LogoutResponse
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.models.user import User
+from app.schemas.login import DataToken
 from app.utils import verify_password
 from app.auth.oauth import create_access_token
 from app.schemas.refresh_token import RefreshTokenRequest , TokenResponse
@@ -148,7 +148,7 @@ def refresh(request: RefreshTokenRequest, db: Session = Depends(get_db), req : R
       
 
 @router.post("/logout" , response_model = LogoutResponse)
-def logout_user(current_user: User = Depends(get_current_user) , db: Session = Depends(get_db) , request : Request = None):
+def logout_user(current_user: DataToken = Depends(get_current_user), db: Session = Depends(get_db), request: Request = None):
 
     revoke_token_by_id(current_user.id , db)
 
@@ -169,7 +169,7 @@ def logout_user(current_user: User = Depends(get_current_user) , db: Session = D
     return {"message": f"Logged out successfully"}
 
 @router.post("/logout-all", response_model=LogoutResponse)
-def logout_all(current_user: User = Depends(get_current_user), db: Session = Depends(get_db) , request : Request = None):
+def logout_all(current_user: DataToken = Depends(get_current_user), db: Session = Depends(get_db), request: Request = None):
     """Logout from all devices"""
     
     

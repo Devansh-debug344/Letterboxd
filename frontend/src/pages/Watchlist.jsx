@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatRating } from '../components/RatingDisplay';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -270,7 +271,7 @@ function Watchlist({ token }) {
                           {renderStars(itemData.rating)}
                         </div>
                         <span className="text-yellow-400 font-semibold ml-2">
-                          {itemData.rating}/5
+                          {formatRating(Number(itemData.rating), 5)}
                         </span>
                       </div>
                     )}

@@ -7,6 +7,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { MoviePage } from './pages/MoviePage';
 import { ProfilePage } from './pages/ProfilePage';
+import { PersonPage } from './pages/PersonPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ReviewEditorPage } from './pages/ReviewEditorPage';
 import { SearchPage } from './pages/SearchPage';
@@ -23,6 +24,7 @@ export default function App() {
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/film/:imdbId" element={<AppShell><MoviePage /></AppShell>} />
+    <Route path="/person/:personId" element={<AppShell><PersonPage /></AppShell>} />
     <Route path="/search" element={<AppShell><SearchPage /></AppShell>} />
     <Route path="/home" element={<Protected><AppShell><HomePage /></AppShell></Protected>} />
     <Route path="/watchlist" element={<Protected><AppShell><WatchlistPage /></AppShell></Protected>} />
