@@ -1,79 +1,86 @@
-from app.schemas.user import CreateUser , UserUpdate
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from app.db.session import get_db
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from app.schemas.user import CreateUser, UserUpdate
 from app.models.user import User
-from app.utils import hash_password
-from sqlalchemy import func
+from app.utils import hash_password_async
 from app.models.watched import Watched
 from app.models.review import Review
 from app.models.watchlist import WatchList
 
-def create_user(user : CreateUser , db : Session):
-    hashed_password = hash_password(user.password)
-    user.password = hashed_password
 
+async def create_user(user: CreateUser, db: AsyncSession) -> User:
+    hashed_password = await hash_password_async(user.password)
     user = User(
-        username = user.username,
-        email = user.email,
-        password = user.password
+        username=user.username,
+        email=user.email,
+        password=hashed_password,
     )
     db.add(user)
-    db.commit()
-    db.refresh(user)
-
+    await db.commit()
+    await db.refresh(user)
     return user
 
-def update_user(update_user : UserUpdate , user : User ,  db : Session):
-    for key , value in update_user.model_dump(exclude_unset=True).items():
-        setattr(user , key , value)
-    db.commit()
-    db.refresh(user)
+
+async def update_user(update_user: UserUpdate, user: User, db: AsyncSession) -> User:
+    for key, value in update_user.model_dump(exclude_unset=True).items():
+        setattr(user, key, value)
+    await db.commit()
+    await db.refresh(user)
     return user
-   
-
-def get_user(db : Session):
-    return db.query(User).all()
-
-def get_user_by_id(user_id : int , db : Session):
-    return db.query(User).filter(User.id == user_id).first()
-
-def get_user_by_username(username : str , db : Session):
-    return db.query(User).filter(User.username == username).first()
-
-def get_user_by_email(email : str , db : Session):
-    return db.query(User).filter(User.email == email).first()
-
-def get_user_profile(id : int , db : Session):
-   return db.query(User).filter(User.id == id).first()
 
 
-def get_user_by_id(user_id: int, db: Session) -> User | None:
-    return db.query(User).filter(User.id == user_id).first()
+async def get_user(db: AsyncSession):
+    result = await db.execute(select(User))
+    return list(result.scalars().all())
 
 
-def get_user_stats(user_id: int, db: Session) -> dict:
-    watched_count = db.query(func.count(Watched.id)).filter(Watched.user_id == user_id).scalar()
-    
-    review_count = db.query(func.count(Review.id)).filter(Review.user_id == user_id).scalar()
-    avg_rating = db.query(func.avg(Review.rating)).filter(Review.user_id == user_id).scalar()
-    WatchList_count = db.query(func.count(WatchList.id)).filter(WatchList.user_id == user_id).scalar()
+async def get_user_by_id(user_id: int, db: AsyncSession) -> User | None:
+    result = await db.execute(select(User).where(User.id == user_id))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_username(username: str, db: AsyncSession) -> User | None:
+    result = await db.execute(select(User).where(User.username == username))
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_email(email: str, db: AsyncSession) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
+async def get_user_profile(id: int, db: AsyncSession) -> User | None:
+    return await get_user_by_id(id, db)
+
+
+async def get_user_stats(user_id: int, db: AsyncSession) -> dict:
+    result = await db.execute(
+        select(
+            select(func.count()).select_from(Watched).where(Watched.user_id == user_id).scalar_subquery(),
+            select(func.count()).select_from(Review).where(Review.user_id == user_id).scalar_subquery(),
+            select(func.count()).select_from(WatchList).where(WatchList.user_id == user_id).scalar_subquery(),
+            select(func.avg(Review.rating)).where(Review.user_id == user_id).scalar_subquery(),
+        )
+    )
+    watched, reviews, watchlist, avg_rating = result.one()
 
     return {
         "user_id": user_id,
-        "watched": watched_count or 0,
-        "reviews": review_count or 0,
-        "WatchList": WatchList_count or 0,
+        "watched": watched or 0,
+        "reviews": reviews or 0,
+        "watchlist": watchlist or 0,
         "avg_rating": round(float(avg_rating), 2) if avg_rating is not None else None,
     }
 
 
-def get_public_reviews_by_user(user_id: int, db: Session, skip: int, limit: int):
-    return (
-        db.query(Review)
-        .filter(Review.user_id == user_id)
+async def get_public_reviews_by_user(user_id: int, db: AsyncSession, skip: int, limit: int) -> list[Review]:
+    result = await db.execute(
+        select(Review)
+        .options(selectinload(Review.movie), selectinload(Review.user))
+        .where(Review.user_id == user_id)
         .order_by(Review.updated_at.desc())
         .offset(skip)
         .limit(limit)
-        .all()
     )
+    return list(result.scalars().all())

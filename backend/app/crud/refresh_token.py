@@ -1,48 +1,47 @@
 from datetime import datetime
+from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.refresh_token import RefreshToken
-from sqlalchemy.orm import Session
 
 
-def add_refresh_token_db(user_id : int , hashed_token : str , expires_at : datetime , db : Session) -> RefreshToken:
-
+async def add_refresh_token_db(user_id: int, hashed_token: str, expires_at: datetime, db: AsyncSession) -> RefreshToken:
     db_token = RefreshToken(
-            user_id=user_id,
-            token=hashed_token,
-            expires_at=expires_at
-        )
-   
-    
+        user_id=user_id,
+        token=hashed_token,
+        expires_at=expires_at,
+    )
     db.add(db_token)
-    db.commit()
-    db.refresh(db_token)
-    
+    await db.commit()
+    await db.refresh(db_token)
     return db_token
 
-def get_token_db(hashed_token : str , db : Session):
 
-    return db.query(RefreshToken).filter(RefreshToken.token == hashed_token).first()
+async def get_token_db(hashed_token: str, db: AsyncSession) -> RefreshToken | None:
+    result = await db.execute(select(RefreshToken).where(RefreshToken.token == hashed_token))
+    return result.scalar_one_or_none()
 
-def revoke_alltoken_by_id(user_id : int , db : Session):
 
-    db.query(RefreshToken).filter(
-        RefreshToken.user_id == user_id
-    ).update({"revoked": True})
-    db.commit()
+async def revoke_alltoken_by_id(user_id: int, db: AsyncSession) -> None:
+    await db.execute(
+        update(RefreshToken).where(RefreshToken.user_id == user_id).values(revoked=True)
+    )
+    await db.commit()
 
-def revoke_token_by_id(user_id : int , db : Session):
-    db.query(RefreshToken).filter(
-        RefreshToken.user_id == user_id,
-        RefreshToken.revoked == False
-    ).update({"revoked": True})
 
-    db.commit()
+async def revoke_token_by_id(user_id: int, db: AsyncSession) -> None:
+    await db.execute(
+        update(RefreshToken)
+        .where(
+            RefreshToken.user_id == user_id,
+            RefreshToken.revoked == False,
+        )
+        .values(revoked=True)
+    )
+    await db.commit()
 
-   
 
-def revoke_all_token(db_token : RefreshToken , db : Session):
-    db.query(RefreshToken).filter(
-            RefreshToken.user_id == db_token.user_id
-        ).update({"revoked": True})
-    
-    db.commit()
-        
+async def revoke_all_token(db_token: RefreshToken, db: AsyncSession) -> None:
+    await db.execute(
+        update(RefreshToken).where(RefreshToken.user_id == db_token.user_id).values(revoked=True)
+    )
+    await db.commit()

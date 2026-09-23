@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { Bookmark, Check, Clock3, Eye, Star } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -7,11 +6,12 @@ import { getMovie, getMovieCollection, getMovieStats } from '../api/movies';
 import { addWatched, addWatchlist, getWatched, getWatchlist, removeWatchlist } from '../api/library';
 import { deleteReview, getMovieReviews, getMyReviews } from '../api/reviews';
 import { getProfile } from '../api/users';
-import { isNotFoundError } from '../api/client';
+import { apiErrorMessage, isNotFoundError } from '../api/client';
 import { movieDirector, movieGenre, movieId, moviePoster, movieRuntime, movieTagline, movieTitle, movieYear, type Movie } from '../api/types';
 import { HorizontalRail } from '../components/HorizontalRail';
 import { PosterCard, PosterSkeleton } from '../components/PosterCard';
 import { ReviewCard } from '../components/ReviewCard';
+import { ReviewComposeBox } from '../components/ReviewComposeBox';
 import { RatingDisplay, normalizeRating } from '../components/RatingDisplay';
 import { useToast } from '../components/Toast';
 import { useAuthStore } from '../stores/auth';
@@ -58,7 +58,7 @@ export function MoviePage() {
   const recommendations = useQuery({ queryKey: ['movie-recommendations', imdbId], queryFn: () => getMovieCollection('popular') });
   const saved = watchlist.data?.response.some((x) => x.id === movie.data?.id || x.imdb_id === imdbId) || false;
   const isWatched = watchedList.data?.some((x) => x.movie_id === movie.data?.id) || false;
-  const fail = (error: unknown) => toast((error as AxiosError<{ detail?: string }>).response?.data?.detail || 'Could not update your diary.');
+  const fail = (error: unknown) => toast(apiErrorMessage(error, 'Could not update your diary.'));
   const authAction = (action: () => void) => signedIn ? action() : (toast('Sign in to save films and track your diary.'), nav('/login'));
   const save = useMutation({
     mutationFn: (shouldSave: boolean) => shouldSave ? addWatchlist(imdbId) : removeWatchlist(imdbId),
@@ -82,7 +82,7 @@ export function MoviePage() {
     },
     onError: (error, _variables, context) => {
       qc.setQueryData(['watchlist'], context?.previousWatchlist);
-      toast((error as AxiosError<{ detail?: string }>).response?.data?.detail || "Couldn't update your watchlist. Please try again.");
+      toast(apiErrorMessage(error, "Couldn't update your watchlist. Please try again."), 'error');
     },
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['watchlist'] }); },
   });
@@ -106,7 +106,7 @@ export function MoviePage() {
       qc.setQueryData(['watched'], context?.previousWatched);
       qc.setQueryData(['stats', imdbId], context?.previousStats);
       qc.setQueryData(['watchlist'], context?.previousWatchlist);
-      toast((error as AxiosError<{ detail?: string }>).response?.data?.detail || "Couldn't mark this movie as watched. Please try again.");
+      toast(apiErrorMessage(error, "Couldn't mark this movie as watched. Please try again."), 'error');
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['watched'] });
@@ -136,7 +136,7 @@ export function MoviePage() {
       {cast.length > 0 && <section className="cast-section"><div className="section-heading"><div><p className="eyebrow">ON SCREEN</p><h2>Cast</h2></div><span>{cast.length} credited</span></div><HorizontalRail labelledBy="cast-rail"><div className="cast-rail">{cast.map((actor, i) => { const card = <article className="cinematic-cast-card" key={`${actor.name}-${i}`}><Portrait name={actor.name || 'Unknown'} profile={actor.profile} className="cast-portrait" /><strong>{actor.name || 'Unknown'}</strong>{actor.character && <span>{actor.character}</span>}</article>; return actor.id ? <Link className="person-card-link" to={`/person/${actor.id}`} key={`${actor.name}-${i}`}>{card}</Link> : card; })}</div></HorizontalRail></section>}
       {crew.length > 0 && <section className="crew-section"><div className="section-heading"><div><p className="eyebrow">BEHIND THE CAMERA</p><h2>Key crew</h2></div></div><div className="crew-list">{crew.map((person) => { const card = <article className="crew-card"><Portrait name={person.name} profile={person.profile} className="crew-portrait" /><strong>{person.name}</strong><span>{person.roles.join(' · ') || 'Crew'}</span></article>; return person.id ? <Link className="person-card-link" to={`/person/${person.id}`} key={person.name}>{card}</Link> : <div key={person.name}>{card}</div>; })}</div></section>}
       {m.trailer && <section className="media-section"><div className="section-heading"><div><p className="eyebrow">WATCH</p><h2>Official trailer</h2></div></div><div className="trailer-frame"><iframe src={`https://www.youtube-nocookie.com/embed/${m.trailer}`} title={`${title} trailer`} loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen /></div></section>}
-      <section className="reviews-section cinematic-reviews"><div className="section-heading"><div><p className="eyebrow">FROM THE DIARY</p><h2>Reviews</h2></div><span>{reviews.data?.length || 0} from the community</span></div>{reviews.isLoading && <div className="review-card skeleton" />}{reviews.data?.length ? reviews.data.map((review) => <ReviewCard key={review.id} review={review} showLikes filmPath={`/film/${imdbId}`} canEdit={!!profile.data?.username && review.user_name === profile.data.username} onDelete={mine.data?.[0]?.id === review.id ? () => deleteMine.mutate() : undefined} />) : !reviews.isLoading && <p className="empty">No reviews yet. Be the first to leave a note.</p>}</section>
+      <section className="reviews-section cinematic-reviews"><div className="section-heading"><div><p className="eyebrow">FROM THE DIARY</p><h2>Reviews</h2></div><span>{reviews.data?.length || 0} from the community</span></div>{signedIn ? <ReviewComposeBox imdbId={imdbId} /> : <button type="button" className="button gold mb" onClick={() => authAction(() => nav(`/review/${imdbId}`))}><Star size={15} /> Write a review</button>}{reviews.isLoading && <div className="review-card skeleton" />}{reviews.data?.length ? reviews.data.map((review) => <ReviewCard key={review.id} review={review} showLikes filmPath={`/film/${imdbId}`} canEdit={!!profile.data?.username && review.user_name === profile.data.username} onDelete={mine.data?.[0]?.id === review.id ? () => deleteMine.mutate() : undefined} />) : !reviews.isLoading && <p className="empty">No reviews yet. Be the first to leave a note.</p>}</section>
       <section className="recommendations-section"><div className="section-heading"><div><p className="eyebrow">KEEP EXPLORING</p><h2>More to discover</h2></div><Link to="/search">Explore all</Link></div><HorizontalRail labelledBy="recommendation-rail"><div className="poster-row">{recommendations.isLoading ? Array.from({ length: 5 }, (_, i) => <PosterSkeleton key={i} />) : recommended.map((film) => <PosterCard key={movieId(film)} movie={film} />)}</div></HorizontalRail></section>
     </div>
   </section>;

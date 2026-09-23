@@ -28,6 +28,7 @@ class ReviewOut(BaseModel):
     user_name: str
     rating: float
     review: str | None
+    spoiler: bool = False
     likes: int
     updated_at: datetime
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { apiErrorMessage } from '../api/client';
 import { getMovie } from '../api/movies';
 import { createReview, getMyReviews, updateReview } from '../api/reviews';
 import { movieTitle } from '../api/types';
@@ -43,10 +43,12 @@ export function ReviewEditorPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-reviews'] });
       qc.invalidateQueries({ queryKey: ['movie-reviews', imdbId] });
+      qc.invalidateQueries({ queryKey: ['my-review', imdbId] });
+      qc.invalidateQueries({ queryKey: ['stats', imdbId] });
       toast(existing ? 'Review updated.' : 'Review published.');
       nav(`/film/${imdbId}`);
     },
-    onError: (e) => toast((e as AxiosError<{ detail?: string }>).response?.data?.detail || 'Could not save review.'),
+    onError: (e) => toast(apiErrorMessage(e, 'Could not save review.'), 'error'),
   });
 
   const previewReview = {
@@ -91,8 +93,8 @@ export function ReviewEditorPage() {
         <ReviewCard review={previewReview} />
       </div>
 
-      <button type="button" className="button full" onClick={() => mut.mutate()} disabled={mut.isPending}>
-        {mut.isPending ? 'Saving…' : existing ? 'Save review' : 'Save review'}
+      <button type="button" className="button full" onClick={() => mut.mutate()} disabled={mut.isPending || movie.isLoading}>
+        {mut.isPending ? 'Saving…' : existing ? 'Save review' : 'Publish review'}
       </button>
     </section>
   );

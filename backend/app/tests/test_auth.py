@@ -89,6 +89,22 @@ def test_rate_limit_brute_force(client , clear_redis):
     print("status code is" , response.status_code)
     assert response.status_code == 429  # Too Many Requests
 
+def test_register_ip_rate_limited(client, clear_redis):
+    """Register endpoint is capped per IP."""
+    for i in range(5):
+        response = client.post(
+            "/api/user/",
+            json={"username": f"rlfiller{i}", "email": f"rlfiller{i}@example.com", "password": "pass123"},
+        )
+        assert response.status_code == 200, response.text
+
+    blocked = client.post(
+        "/api/user/",
+        json={"username": "rlfiller6", "email": "rlfiller6@example.com", "password": "pass123"},
+    )
+    assert blocked.status_code == 429
+
+
 def test_refresh_token(client, test_user):
     """Test token refresh"""
     # Login first

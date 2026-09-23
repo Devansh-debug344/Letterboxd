@@ -1,29 +1,39 @@
-from functools import partial
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from starlette.concurrency import run_in_threadpool
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from app.config import setting
 
-db_url = setting.db_url.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(
+def _async_db_url(url: str) -> str:
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if url.startswith("sqlite://"):
+        return url.replace("sqlite://", "sqlite+aiosqlite://", 1)
+    return url
+
+
+db_url = _async_db_url(setting.db_url or "")
+
+engine: AsyncEngine = create_async_engine(
     db_url,
     pool_pre_ping=True,
     pool_recycle=300,
-    pool_size=5,
-    max_overflow=2,
+    pool_size=10,
+    max_overflow=20,
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
-def get_db():
-    db = SessionLocal()
-    try:
+
+async def get_db() -> AsyncSession:
+    async with AsyncSessionLocal() as db:
+     try:
         yield db
-    finally:
-        db.close()
-
-
-async def run_db(operation, *args, **kwargs):
-    """Run synchronous SQLAlchemy work without blocking the async event loop."""
-    return await run_in_threadpool(partial(operation, *args, **kwargs))
+     except Exception as e:
+        await db.rollback()
+        raise e

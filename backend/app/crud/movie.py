@@ -1,57 +1,61 @@
-from sqlalchemy import func
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.review import Review
 from app.models.movie import Movie
 from app.models.watched import Watched
 from app.models.watchlist import WatchList
-from sqlalchemy.orm import Session
 
-def save_movie_db(response : dict , db : Session):
-    
-    existing_movie = db.query(Movie).filter(Movie.imdb_id == response.get("imdbID")).first()
+
+async def save_movie_db(response: dict, db: AsyncSession) -> Movie:
+    existing_movie = await get_movie_by_omdb_id(response.get("imdbID"), db)
 
     if not existing_movie:
-        
         movie = Movie(
-         imdb_id = response.get("imdbID"),
-         title = response.get("Title"),
-         year = response.get('Year'),
-         genre = response.get('Genre'),
-         poster = response.get('Poster'),
-         plot =  response.get('Plot'),
-         imdbRating = response.get('imdbRating'),
-         type = response.get('Type'),
-         awards = response.get('Awards'),
-         language = response.get('Language'),
-         runtime = response.get('Runtime'),
-         released = response.get('Released')
+            imdb_id=response.get("imdbID"),
+            title=response.get("Title"),
+            year=response.get("Year"),
+            genre=response.get("Genre"),
+            poster=response.get("Poster"),
+            plot=response.get("Plot"),
+            imdbRating=response.get("imdbRating"),
+            type=response.get("Type"),
+            awards=response.get("Awards"),
+            language=response.get("Language"),
+            runtime=response.get("Runtime"),
+            released=response.get("Released"),
         )
-
         db.add(movie)
-        db.commit()
-        db.refresh(movie)
-
+        await db.commit()
+        await db.refresh(movie)
         return movie
     return existing_movie
 
-def get_movie_by_omdb_id(id : str , db : Session):
-    movie = db.query(Movie).filter(Movie.imdb_id == id).first()
-    return movie
 
-def get_movie_by_title(title : str , db : Session):
-    movie = db.query(Movie).filter(Movie.title == title).first()
-    return movie
+async def get_movie_by_omdb_id(id: str, db: AsyncSession) -> Movie | None:
+    result = await db.execute(select(Movie).where(Movie.imdb_id == id))
+    return result.scalar_one_or_none()
 
 
-def get_movie_by_id(id : int , db : Session):
-    movie = db.query(Movie).filter(Movie.id == id).first()
-    return movie
+async def get_movie_by_title(title: str, db: AsyncSession) -> Movie | None:
+    result = await db.execute(select(Movie).where(Movie.title == title))
+    return result.scalar_one_or_none()
 
 
-def get_movie_stats(movie_id: int, db: Session) -> dict:
-    review_count = db.query(func.count(Review.id)).filter(Review.movie_id == movie_id).scalar()
-    avg_rating = db.query(func.avg(Review.rating)).filter(Review.movie_id == movie_id).scalar()
-    watched_count = db.query(func.count(Watched.id)).filter(Watched.movie_id == movie_id).scalar()
-    watchlist_count = db.query(func.count(WatchList.id)).filter(WatchList.movie_id == movie_id).scalar()
+async def get_movie_by_id(id: int, db: AsyncSession) -> Movie | None:
+    result = await db.execute(select(Movie).where(Movie.id == id))
+    return result.scalar_one_or_none()
+
+
+async def get_movie_stats(movie_id: int, db: AsyncSession) -> dict:
+    result = await db.execute(
+        select(
+            select(func.count()).select_from(Review).where(Review.movie_id == movie_id).scalar_subquery(),
+            select(func.avg(Review.rating)).where(Review.movie_id == movie_id).scalar_subquery(),
+            select(func.count()).select_from(Watched).where(Watched.movie_id == movie_id).scalar_subquery(),
+            select(func.count()).select_from(WatchList).where(WatchList.movie_id == movie_id).scalar_subquery(),
+        )
+    )
+    review_count, avg_rating, watched_count, watchlist_count = result.one()
 
     return {
         "review_count": review_count or 0,

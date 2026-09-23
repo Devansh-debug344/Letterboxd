@@ -1,10 +1,10 @@
 from sqlalchemy import Table
 from sqlalchemy.dialects import postgresql, sqlite
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def insert_ignore(
-    db: Session,
+    db: AsyncSession,
     table: Table,
     constraint: str,
     **values,

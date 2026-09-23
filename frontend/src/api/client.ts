@@ -2,6 +2,21 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/auth';
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
 export const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.response?.status === 404;
+
+export const apiErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError(error)) {
+    const detail = (error.response?.data as { detail?: unknown } | undefined)?.detail;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail)) {
+      const messages = detail
+        .map((item) => (item && typeof item === 'object' && 'msg' in item ? String((item as { msg: unknown }).msg) : String(item)))
+        .filter(Boolean);
+      if (messages.length) return messages.join(' · ');
+    }
+    if (detail != null) return String(detail);
+  }
+  return fallback;
+};
 api.interceptors.request.use((config) => { const token = useAuthStore.getState().accessToken; if (token) config.headers.Authorization = `Bearer ${token}`; return config; });
 let refreshing: Promise<string> | null = null;
 api.interceptors.response.use((r) => r, async (error: AxiosError) => {

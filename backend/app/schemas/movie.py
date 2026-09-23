@@ -8,7 +8,10 @@ class MoviesOut(BaseModel):
      genre : str
      year : int
      plot  : str
+     language : Optional[str] = None
+     country : Optional[str] = None
      poster: Optional[str] = None
+     
 
      class Config:
           from_attributes = True

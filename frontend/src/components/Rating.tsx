@@ -17,7 +17,7 @@ export function RatingPicker({
       {stars.map((n) => {
         const half = n - 0.5;
         const starValue = n / 2;
-        const halfValue = half / 2;
+        const halfValue = Math.max(0.5, half / 2);
         const filled = value >= starValue;
         const halfFilled = !filled && value >= halfValue;
         return (

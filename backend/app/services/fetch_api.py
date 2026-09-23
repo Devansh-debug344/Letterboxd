@@ -9,19 +9,25 @@ from time import monotonic
 from typing import Any
 
 import httpx
-from redis import asyncio as redis_async
 
 from app.config import setting
+from app.db.redis import get_redis
 
 TMDB_API = "https://api.themoviedb.org/3"
 POSTER_BASE = "https://image.tmdb.org/t/p/w342"
 PROFILE_BASE = "https://image.tmdb.org/t/p/w185"
 _CACHE_TTL_SECONDS = 15 * 60
 _CACHE_PREFIX = "letterboxd:cache:v1:"
+_EXTERNAL_RATE_KEY = f"{_CACHE_PREFIX}tmdb:rate:v1"
+_EXTERNAL_MAX_PER_WINDOW = 30
+_EXTERNAL_WINDOW_SECONDS = 60
 _cache: dict[str, tuple[float, Any]] = {}
 _in_flight: dict[str, asyncio.Task[Any]] = {}
 _client = httpx.AsyncClient(timeout=httpx.Timeout(8.0, connect=3.0), http2=True)
-_redis = redis_async.from_url(setting.REDIS_URL, decode_responses=True) if setting.REDIS_URL else None
+
+
+async def close_client() -> None:
+    await _client.aclose()
 
 
 def _poster(path: str | None) -> str | None:
@@ -84,11 +90,14 @@ def _normalise_movie(movie: dict[str, Any], include_details: bool = False) -> di
     return result
 
 
+# "Check cache first → if not there, get the data → save it in cache → return it."
+
 async def _cached(key: str, factory: Callable[[], Awaitable[Any]]) -> Any:
     redis_key = f"{_CACHE_PREFIX}{key}"
-    if _redis:
+    redis = get_redis()
+    if redis:
         try:
-            cached = await _redis.get(redis_key)
+            cached = await redis.get(redis_key)
             if cached:
                 return json.loads(cached)
         except Exception:
@@ -102,13 +111,13 @@ async def _cached(key: str, factory: Callable[[], Awaitable[Any]]) -> Any:
 
     task = _in_flight.get(key)
     if task is None:
-        task = asyncio.create_task(factory())
+        task = asyncio.create_task(factory()) #start a process 
         _in_flight[key] = task
     try:
-        value = await task
-        if _redis:
+        value = await task  #actual wait 
+        if redis:
             try:
-                await _redis.set(redis_key, json.dumps(value), ex=_CACHE_TTL_SECONDS)
+                await redis.set(redis_key, json.dumps(value), ex=_CACHE_TTL_SECONDS)
             except Exception:
                 _cache[key] = (monotonic() + _CACHE_TTL_SECONDS, value)
         else:
@@ -119,7 +128,31 @@ async def _cached(key: str, factory: Callable[[], Awaitable[Any]]) -> Any:
             _in_flight.pop(key, None)
 
 
+async def _external_throttle() -> None:
+    """Respect TMDB's rate tier with a process-wide fixed-window limiter.
+
+    Blocks until the current one-minute window rolls over once the budget
+    is spent, instead of hammering the external API with 429s.
+    """
+    redis = get_redis()
+    if redis is None:
+        return
+    while True:
+        try:
+            count = await redis.incr(_EXTERNAL_RATE_KEY)
+        except Exception:
+            return
+        if count == 1:
+            await redis.expire(_EXTERNAL_RATE_KEY, _EXTERNAL_WINDOW_SECONDS)
+        if count <= _EXTERNAL_MAX_PER_WINDOW:
+            return
+        ttl = await redis.ttl(_EXTERNAL_RATE_KEY)
+        delay = float(ttl if ttl and ttl > 0 else _EXTERNAL_WINDOW_SECONDS)
+        await asyncio.sleep(min(delay, _EXTERNAL_WINDOW_SECONDS))
+
+
 async def _get(path: str, params: dict[str, str]) -> dict[str, Any]:
+    await _external_throttle()
     response = await _client.get(f"{TMDB_API}{path}", params={"api_key": setting.tmdb_api_key, **params})
     response.raise_for_status()
     return response.json()
@@ -133,9 +166,10 @@ async def fetch_movies_from_api(movie_id: str) -> dict[str, Any]:
 
 async def get_cached_movie(movie_id: str) -> dict[str, Any] | None:
     redis_key = f"{_CACHE_PREFIX}movie:{movie_id}"
-    if _redis:
+    redis = get_redis()
+    if redis:
         try:
-            cached = await _redis.get(redis_key)
+            cached = await redis.get(redis_key)
             return json.loads(cached) if cached else None
         except Exception:
             cached = _cache.get(f"movie:{movie_id}")

@@ -13,6 +13,6 @@ class AuthEvent(Base):
     reason = Column(String, nullable=True, default=None)  
     ip_address = Column(String, nullable=True, default=None) 
     user_agent = Column(String, nullable=True, default=None)  
-    created_at = Column(DateTime, default=datetime.now(timezone.utc), index=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.now(timezone.utc), index=True)
     
     user = relationship("User", foreign_keys=[user_id])
