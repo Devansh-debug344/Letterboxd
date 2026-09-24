@@ -9,6 +9,7 @@ class User(Base):
     username = Column(String , unique=True , nullable= False)
     email = Column(String , unique=True , nullable = False)
     password = Column(String , nullable=False)
+    avatar_url = Column(String , nullable=True)
     joined_at = Column(DateTime(timezone = True) , default = datetime.now(timezone.utc))
 
     watchlists = relationship("WatchList", back_populates="user", cascade="all,delete-orphan")

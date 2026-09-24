@@ -21,6 +21,14 @@ def _clean_redis_session():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _no_live_cloudinary(monkeypatch):
+    # Never hit TMDB/Cloudinary from the test suite. Individual tests opt back
+    # in (and mock the upload/download steps) when covering the import flow.
+    monkeypatch.setattr("app.services.movie_import.cloudinary_configured", lambda: False)
+    yield
+
+
 @pytest.fixture
 async def db():
     async with async_engine.begin() as conn:

@@ -11,6 +11,7 @@ class MoviesOut(BaseModel):
      language : Optional[str] = None
      country : Optional[str] = None
      poster: Optional[str] = None
+     backdrop: Optional[str] = None
      
 
      class Config:

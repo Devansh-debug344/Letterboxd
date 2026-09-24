@@ -13,6 +13,12 @@ class Setting(BaseSettings):
     TWILIO_ACCOUNT_SID: str =  os.getenv("TWILIO_ACCOUNT_SID")
     TWILIO_API_SECRET : str = os.getenv("TWILIO_API_SECRET")
     TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER")
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
+    CLOUDINARY_FOLDER: str = os.getenv("CLOUDINARY_FOLDER", "letterboxd")
+    CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "")
+    CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "")
 
     # class Config:
     #     env_file = ".env"

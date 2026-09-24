@@ -15,6 +15,7 @@ from app.db.redis import get_redis
 
 TMDB_API = "https://api.themoviedb.org/3"
 POSTER_BASE = "https://image.tmdb.org/t/p/w342"
+BACKDROP_BASE = "https://image.tmdb.org/t/p/w780"
 PROFILE_BASE = "https://image.tmdb.org/t/p/w185"
 _CACHE_TTL_SECONDS = 15 * 60
 _CACHE_PREFIX = "letterboxd:cache:v1:"
@@ -34,6 +35,10 @@ def _poster(path: str | None) -> str | None:
     return f"{POSTER_BASE}{path}" if path else None
 
 
+def _backdrop(path: str | None) -> str | None:
+    return f"{BACKDROP_BASE}{path}" if path else None
+
+
 def _profile(path: str | None) -> str | None:
     return f"{PROFILE_BASE}{path}" if path else None
 
@@ -44,6 +49,7 @@ def _normalise_movie(movie: dict[str, Any], include_details: bool = False) -> di
         "Title": movie.get("title"),
         "Year": (movie.get("release_date") or "")[:4] or None,
         "Poster": _poster(movie.get("poster_path")),
+        "Backdrop": _backdrop(movie.get("backdrop_path")),
         "Plot": movie.get("overview"),
         "imdbRating": str(movie["vote_average"]) if movie.get("vote_average") is not None else None,
         "Type": "movie",

@@ -6,7 +6,14 @@ from app.models.watched import Watched
 from app.models.watchlist import WatchList
 
 
-async def save_movie_db(response: dict, db: AsyncSession) -> Movie:
+async def save_movie_db(
+    response: dict,
+    db: AsyncSession,
+    *,
+    poster_public_id: str | None = None,
+    backdrop: str | None = None,
+    backdrop_public_id: str | None = None,
+) -> Movie:
     existing_movie = await get_movie_by_omdb_id(response.get("imdbID"), db)
 
     if not existing_movie:
@@ -16,6 +23,9 @@ async def save_movie_db(response: dict, db: AsyncSession) -> Movie:
             year=response.get("Year"),
             genre=response.get("Genre"),
             poster=response.get("Poster"),
+            poster_public_id=poster_public_id,
+            backdrop=backdrop,
+            backdrop_public_id=backdrop_public_id,
             plot=response.get("Plot"),
             imdbRating=response.get("imdbRating"),
             type=response.get("Type"),
@@ -44,6 +54,15 @@ async def get_movie_by_title(title: str, db: AsyncSession) -> Movie | None:
 async def get_movie_by_id(id: int, db: AsyncSession) -> Movie | None:
     result = await db.execute(select(Movie).where(Movie.id == id))
     return result.scalar_one_or_none()
+
+
+async def update_movie_media(movie_id: int, updates: dict[str, str], db: AsyncSession) -> None:
+    movie = await db.get(Movie, movie_id)
+    if movie is None:
+        return
+    for key, value in updates.items():
+        setattr(movie, key, value)
+    await db.commit()
 
 
 async def get_movie_stats(movie_id: int, db: AsyncSession) -> dict:

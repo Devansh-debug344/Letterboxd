@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import login, user, watchlist, review, otp, watched, movie
+from app.api import login, user, watchlist, review, otp, watched, movie, media
 from app.db.session import engine
 from app.db.redis import close_redis, init_redis
 from app.services.fetch_api import close_client
@@ -39,5 +39,6 @@ def create_app():
     app.include_router(otp.router, prefix="/api")
     app.include_router(watched.router, prefix="/api")
     app.include_router(movie.router, prefix="/api")
+    app.include_router(media.router, prefix="/api")
 
     return app

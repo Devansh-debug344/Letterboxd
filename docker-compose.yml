@@ -3,15 +3,32 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: Dockerfile
     environment:
-      DATABASE_URL: postgresql://postgres:1234@db:5432/bookingappdb
+      db_url: postgresql://postgres:1234@db:5432/bookingappdb
       REDIS_URL: redis://redis:6379/0
     depends_on:
       - db
       - redis
     ports:
       - "8000:8000"
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A app.celery_app.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      db_url: postgresql://postgres:1234@db:5432/bookingappdb
+      REDIS_URL: redis://redis:6379/0
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-letterboxd}
+    depends_on:
+      - db
+      - redis
+    # No ports: the worker is only reachable through the broker.
 
   db:
     image: postgres:15
@@ -24,8 +41,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    # No published ports: only reachable by other services on the network.
 
   frontend:
     build: ./frontend

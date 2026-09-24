@@ -12,6 +12,8 @@ export type Movie = {
   Plot?: string;
   poster?: string;
   Poster?: string;
+  backdrop?: string;
+  Backdrop?: string;
   imdbRating?: string;
   Type?: string;
   Director?: string;
@@ -46,6 +48,7 @@ export const movieId = (m: Movie) => m.imdb_id || m.imdbID || '';
 export const movieTitle = (m: Movie) => m.title || m.Title || 'Untitled film';
 export const movieYear = (m: Movie) => m.year || m.Year || '—';
 export const moviePoster = (m: Movie) => { const p = m.poster || m.Poster; return p && p !== 'N/A' ? p : undefined; };
+export const movieBackdrop = (m: Movie) => { const b = m.backdrop || m.Backdrop; return b && b !== 'N/A' ? b : undefined; };
 export const movieDirector = (m: Movie) => m.Director || m.director || null;
 export const movieRuntime = (m: Movie) => m.Runtime || m.runtime || null;
 export const movieTagline = (m: Movie) => m.Tagline || m.tagline || null;

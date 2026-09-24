@@ -9,6 +9,7 @@ class CreateUser(BaseModel):
 class UserOut(BaseModel):
     username : str
     email : str
+    avatar_url: Optional[str] = None
     joined_at : datetime
 
     class Config:
@@ -17,6 +18,7 @@ class UserOut(BaseModel):
 class UserProfile(BaseModel):
     username : str
     email : str
+    avatar_url: Optional[str] = None
     joined_at : datetime
 
     class Config:

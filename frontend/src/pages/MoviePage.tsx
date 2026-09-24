@@ -7,7 +7,7 @@ import { addWatched, addWatchlist, getWatched, getWatchlist, removeWatchlist } f
 import { deleteReview, getMovieReviews, getMyReviews } from '../api/reviews';
 import { getProfile } from '../api/users';
 import { apiErrorMessage, isNotFoundError } from '../api/client';
-import { movieDirector, movieGenre, movieId, moviePoster, movieRuntime, movieTagline, movieTitle, movieYear, type Movie } from '../api/types';
+import { movieBackdrop, movieDirector, movieGenre, movieId, moviePoster, movieRuntime, movieTagline, movieTitle, movieYear, type Movie } from '../api/types';
 import { HorizontalRail } from '../components/HorizontalRail';
 import { PosterCard, PosterSkeleton } from '../components/PosterCard';
 import { ReviewCard } from '../components/ReviewCard';
@@ -118,13 +118,13 @@ export function MoviePage() {
   if (movie.isLoading || !imdbId) return <section className="page movie-loading cinematic-loading"><div className="movie-poster skeleton" /><div className="copy-skeleton skeleton" /></section>;
   if (movie.isError && isNotFoundError(movie.error)) return <section className="page empty">That film couldn&apos;t be found. <Link to="/search">Search films</Link></section>;
   if (movie.isError || !movie.data) return <section className="page empty">This film is temporarily unavailable. Please try again shortly.</section>;
-  const m = movie.data; const title = movieTitle(m); const poster = moviePoster(m); const genre = movieGenre(m); const director = movieDirector(m); const runtime = movieRuntime(m); const tagline = movieTagline(m);
+  const m = movie.data; const title = movieTitle(m); const poster = moviePoster(m); const backdrop = movieBackdrop(m) || poster; const genre = movieGenre(m); const director = movieDirector(m); const runtime = movieRuntime(m); const tagline = movieTagline(m);
   const cast: Array<{ id?: number; name?: string; character?: string; profile?: string | null }> = m.cast ?? (m.Actors || m.actors || '').split(',').filter(Boolean).map((name) => ({ name: name.trim() }));
   const facts = [fact('Release date', m.Released || m.released), fact('Runtime', runtime), fact('Language', m.Language || m.language), fact('Country', m.Country), fact('Certification', m.Rated), fact('Genres', genre)].filter(Boolean) as { label: string; value: string }[];
   const crew = mergeCrew(m); const directorPerson = crew.find((person) => person.roles.includes('Director'));
   const recommended = (recommendations.data?.items ?? []).filter((film) => movieId(film) !== imdbId).slice(0, 8); const ownRating = mine.data?.[0]?.rating;
   return <section className="movie-page cinematic-page page-enter">
-    <header className="cinematic-hero">{poster && <div className="cinematic-backdrop" style={{ backgroundImage: `url(${poster})` }} aria-hidden="true" />}<div className="cinematic-backdrop-scrim" />
+    <header className="cinematic-hero">{poster && <div className="cinematic-backdrop" style={{ backgroundImage: `url(${backdrop})` }} aria-hidden="true" />}<div className="cinematic-backdrop-scrim" />
       <div className="cinematic-hero-content">{poster ? <img className="cinematic-poster" src={poster} alt={`${title} poster`} fetchPriority="high" /> : <div className="cinematic-poster poster-fallback">{title}</div>}<div className="cinematic-summary">
         <p className="eyebrow">{m.Type || 'Film'} <span>·</span> {movieYear(m)}</p><h1>{title}</h1>{tagline && <p className="cinematic-tagline">“{tagline}”</p>}
         <div className="cinematic-meta">{m.Rated && <span className="certificate">{m.Rated}</span>}{runtime && <span><Clock3 size={14} /> {runtime}</span>}{genre && <span>{genre}</span>}</div>{director && <p className="director-line">A film by {directorPerson?.id ? <Link to={`/person/${directorPerson.id}`}><strong>{director}</strong></Link> : <strong>{director}</strong>}</p>}

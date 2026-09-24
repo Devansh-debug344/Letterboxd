@@ -6,6 +6,7 @@ from app.schemas.login import DataToken
 from app.auth.oauth import get_current_user
 from app.schemas.review import ReviewCreate, ReviewDelete, ReviewOut, ReviewUpdate
 from app.crud.movie import get_movie_by_omdb_id, save_movie_db
+from app.services.movie_import import enqueue_movie_media
 from app.services.fetch_api import fetch_movies_from_api
 from app.services.rate_limiter import rate_limiter
 from app.crud.review import (
@@ -48,7 +49,9 @@ async def handle_create_review(
                 raise HTTPException(status_code=404, detail="Movie not found")
             raise HTTPException(status_code=502, detail="Movie service unavailable") from error
 
-        movie = await save_movie_db(response, db)
+        movie = await save_movie_db(response, db, backdrop=response.get("Backdrop"))
+        if movie.poster_public_id is None:
+            enqueue_movie_media(movie.imdb_id, movie.poster, movie.backdrop)
 
     item = await create_review(current_user.id, movie.id, body, db)
     await _invalidate_related(body.omdb_id, current_user.id)

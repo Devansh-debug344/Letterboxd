@@ -5,6 +5,7 @@ from app.db.session import get_db
 from app.schemas.watched import WatchedCreate, WatchedOut
 from app.schemas.login import DataToken
 from app.crud.movie import get_movie_by_omdb_id, save_movie_db
+from app.services.movie_import import enqueue_movie_media
 from app.crud.watched import add_movie_watched, get_watched_movie, get_del_watched_movies_by_id
 from app.auth.oauth import get_current_user
 from app.services.fetch_api import fetch_movies_from_api
@@ -32,7 +33,9 @@ async def add_watched(
                 raise HTTPException(status_code=404, detail="Movie not found")
             raise HTTPException(status_code=502, detail="Movie service unavailable") from error
 
-        movie = await save_movie_db(response, db)
+        movie = await save_movie_db(response, db, backdrop=response.get("Backdrop"))
+        if movie.poster_public_id is None:
+            enqueue_movie_media(movie.imdb_id, movie.poster, movie.backdrop)
 
     added_movie = await add_movie_watched(current_user.id, movie.id, body.rating, body.watched_at, db)
 

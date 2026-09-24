@@ -12,6 +12,7 @@ from app.services.fetch_api import (
 )
 from app.schemas.movie import MovieStats , MoviesOut
 from app.crud.movie import get_movie_stats, get_movie_by_omdb_id, get_movie_by_title, save_movie_db
+from app.services.movie_import import enqueue_movie_media
 from app.services.cache import get_json, set_json
 
 router = APIRouter(prefix="/movies", tags=['Movies info'])
@@ -108,6 +109,8 @@ async def get_movie(omdb_id: str, db: AsyncSession = Depends(get_db), request: R
 
     movie = await get_movie_by_omdb_id(omdb_id, db)
     if movie:
+        if movie.poster_public_id is None:
+            enqueue_movie_media(movie.imdb_id, movie.poster, movie.backdrop)
         payload = MoviesOut.model_validate(movie)
         await set_json(cache_key, payload, ttl_seconds=300)
         return payload
@@ -124,7 +127,9 @@ async def get_movie(omdb_id: str, db: AsyncSession = Depends(get_db), request: R
     else:
         data = cached_tmdb_details
 
-    saved_movie = await save_movie_db(data, db)
+    saved_movie = await save_movie_db(data, db, backdrop=data.get("Backdrop"))
+    if saved_movie.poster_public_id is None:
+        enqueue_movie_media(saved_movie.imdb_id, saved_movie.poster, saved_movie.backdrop)
     payload = MoviesOut.model_validate(saved_movie)
     await set_json(cache_key, payload, ttl_seconds=300)
     return payload

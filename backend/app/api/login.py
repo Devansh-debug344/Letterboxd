@@ -47,7 +47,7 @@ async def login(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        await AuditService.log_event(auth_event, db)
+        AuditService.log_event(auth_event)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts. Try again in 15 minutes.",
@@ -64,7 +64,7 @@ async def login(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        await AuditService.log_event(auth_event, db)
+        AuditService.log_event(auth_event)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     if not await verify_password_async(user_details.password, user.password):
@@ -76,7 +76,7 @@ async def login(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        await AuditService.log_event(auth_event, db)
+        AuditService.log_event(auth_event)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password")
 
     access_token = create_access_token({'user_id': user.id})
@@ -90,7 +90,7 @@ async def login(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        await AuditService.log_event(auth_event, db)
+        AuditService.log_event(auth_event)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token not found")
 
     auth_event = AuthEventSchema(
@@ -100,7 +100,7 @@ async def login(
         ip_address=ip_address,
         user_agent=user_agent,
     )
-    await AuditService.log_event(auth_event, db)
+    AuditService.log_event(auth_event)
 
     refresh_token, _ = await create_refresh_token(user.id, db)
 
@@ -141,7 +141,7 @@ async def refresh(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-        await AuditService.log_event(auth_event, db)
+        AuditService.log_event(auth_event)
 
         return {
             "access_token": new_access_token,
@@ -172,7 +172,7 @@ async def logout_user(
         ip_address=ip_address,
         user_agent=user_agent,
     )
-    await AuditService.log_event(auth_event, db)
+    AuditService.log_event(auth_event)
 
     return {"message": "Logged out successfully"}
 
@@ -196,6 +196,6 @@ async def logout_all(
         ip_address=ip_address,
         user_agent=user_agent,
     )
-    await AuditService.log_event(auth_event, db)
+    AuditService.log_event(auth_event)
 
     return {"message": "All sessions logged out"}
