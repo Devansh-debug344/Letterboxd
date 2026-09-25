@@ -1,11 +1,16 @@
 from dotenv import load_dotenv
 import os
-load_dotenv()
+from pathlib import Path
+grandparent_dir = Path(__file__).resolve().parents[2]
+
+env_path = grandparent_dir / '.env'
+
+load_dotenv(dotenv_path=env_path)
 from pydantic_settings import BaseSettings
 
 class Setting(BaseSettings):
-    tmdb_api_key : str = os.getenv("tmdb_api_key")
-    db_url : str = os.getenv("db_url")
+    tmdb_api_key : str = os.getenv("TMDB_API_KEY")
+    db_url : str = os.getenv("DB_URL")
     JWT_SECRET_TOKEN : str = os.getenv("JWT_SECRET_TOKEN")
     REDIS_URL : str = os.getenv("REDIS_URL")
     REFRESH_TOKEN_EXPIRE_DAYS : int = 7

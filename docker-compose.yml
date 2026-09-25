@@ -1,49 +1,37 @@
-version: "3.9"
 services:
   backend:
     build:
       context: .
       dockerfile: Dockerfile
+
     environment:
-      db_url: postgresql://postgres:1234@db:5432/bookingappdb
-      REDIS_URL: redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
-    ports:
+      db_url: ${DB_URL}
+      REDIS_URL: ${REDIS_URL}
+
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-letterboxd}
+
+    expose:
       - "8000:8000"
+
+    restart: unless-stopped
 
   celery-worker:
     build:
       context: .
       dockerfile: Dockerfile
+
     command: celery -A app.celery_app.celery_app worker --loglevel=info --concurrency=2
+
     environment:
-      db_url: postgresql://postgres:1234@db:5432/bookingappdb
-      REDIS_URL: redis://redis:6379/0
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      db_url: ${DB_URL}
+      REDIS_URL: ${REDIS_URL}
+
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-letterboxd}
-    depends_on:
-      - db
-      - redis
-    # No ports: the worker is only reachable through the broker.
 
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: bookingappdb
-    ports:
-      - "5433:5432"
-
-  redis:
-    image: redis:7-alpine
-    # No published ports: only reachable by other services on the network.
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
