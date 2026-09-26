@@ -4,17 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile
 
-    environment:
-      db_url: ${DB_URL}
-      REDIS_URL: ${REDIS_URL}
-
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-letterboxd}
+    env_file:
+      - .env
 
     expose:
-      - "8000:8000"
+      - "8000"
 
     restart: unless-stopped
 
@@ -23,15 +17,9 @@ services:
       context: .
       dockerfile: Dockerfile
 
+    env_file:
+      - .env
+
     command: celery -A app.celery_app.celery_app worker --loglevel=info --concurrency=2
-
-    environment:
-      db_url: ${DB_URL}
-      REDIS_URL: ${REDIS_URL}
-
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-letterboxd}
 
     restart: unless-stopped
