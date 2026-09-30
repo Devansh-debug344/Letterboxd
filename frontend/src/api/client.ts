@@ -2,11 +2,12 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/auth';
 const configuredApiUrl = import.meta.env.VITE_API_URL;
 const isLocalApiUrl = /(?:localhost|127[.]0[.]0[.]1)/i.test(configuredApiUrl);
+const PRODUCTION_API_URL = 'https://devansh.online';
 const API_BASE_URL = import.meta.env.DEV
   ? configuredApiUrl || 'http://localhost:8000'
   : isLocalApiUrl
-    ? window.location.origin
-    : configuredApiUrl || window.location.origin;
+    ? PRODUCTION_API_URL
+    : configuredApiUrl || PRODUCTION_API_URL;
 const api = axios.create({ baseURL: API_BASE_URL });
 export const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.response?.status === 404;
 
