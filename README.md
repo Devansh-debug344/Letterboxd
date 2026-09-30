@@ -74,8 +74,8 @@ alembic upgrade head
 
 # Start the server
 uvicorn main:app --reload
-Backend will run at: http://localhost:8000
-Docs available at: http://localhost:8000/docs
+Backend will run at: https://devansh.online
+Docs available at: https://devansh.online/docs
 cd frontend
 npm install
 npm run dev

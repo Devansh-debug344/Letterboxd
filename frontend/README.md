@@ -2,9 +2,8 @@
 
 React + Vite film diary frontend for the existing FastAPI API.
 
-1. Copy `.env.example` to `.env` and set `VITE_API_URL` (normally `http://localhost:8000`).
-2. Run `npm install`.
-3. Run `npm run dev`.
+1. Run `npm install`.
+2. Run `npm run build`.
 
 The client only uses the specified `/api` routes. It persists access and refresh tokens in local storage, refreshes after a 401, and clears the session if refresh fails.
 
