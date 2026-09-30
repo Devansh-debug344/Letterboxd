@@ -1,6 +1,8 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../stores/auth';
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000' });
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : '');
+if (!import.meta.env.VITE_API_URL && !import.meta.env.DEV) console.error('[api] VITE_API_URL not set in production build; API requests will use the same origin.');
+const api = axios.create({ baseURL: API_BASE_URL });
 export const isNotFoundError = (error: unknown) => axios.isAxiosError(error) && error.response?.status === 404;
 
 export const apiErrorMessage = (error: unknown, fallback: string) => {
