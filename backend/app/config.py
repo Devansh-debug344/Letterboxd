@@ -24,6 +24,13 @@ class Setting(BaseSettings):
     CLOUDINARY_FOLDER: str = os.getenv("CLOUDINARY_FOLDER", "letterboxd")
     CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "")
     CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "")
+    # Keep these below the idle timeout of any NAT/load balancer in front of
+    # Redis. They are intentionally bounded so a Redis outage cannot hold a
+    # web request indefinitely.
+    REDIS_SOCKET_CONNECT_TIMEOUT: float = float(os.getenv("REDIS_SOCKET_CONNECT_TIMEOUT", "2"))
+    REDIS_SOCKET_TIMEOUT: float = float(os.getenv("REDIS_SOCKET_TIMEOUT", "2"))
+    REDIS_HEALTH_CHECK_INTERVAL: float = float(os.getenv("REDIS_HEALTH_CHECK_INTERVAL", "30"))
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "50"))
 
     # class Config:
     #     env_file = ".env"
@@ -48,5 +55,4 @@ setting = Setting()
 #            app_name =app_name,
 #            db_url   = db_url
 #         )
-
 

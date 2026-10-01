@@ -98,3 +98,12 @@ Future Improvements
  Image uploads for user profiles
  Improved mobile experience
  Caching layer (Redis)
+
+Redis connection resilience
+
+The API pool validates an idle Redis connection every 30 seconds, enables TCP
+keepalive, and uses two-second connect and command deadlines. These can be
+tuned with `REDIS_HEALTH_CHECK_INTERVAL`, `REDIS_SOCKET_CONNECT_TIMEOUT`,
+`REDIS_SOCKET_TIMEOUT`, and `REDIS_MAX_CONNECTIONS`. Cache reads, writes, and
+deletes retry once after a connection failure; counter increments do not retry
+because their result is ambiguous after a lost response.
