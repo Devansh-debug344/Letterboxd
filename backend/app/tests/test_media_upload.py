@@ -24,9 +24,9 @@ def test_avatar_upload_stores_secure_url(client, test_user, monkeypatch):
         call["n"] += 1
         suffix = "abc123" if call["n"] == 1 else "new456"
         return {
-            "public_id": f"letterboxd/avatars/user_1/avatar/{suffix}",
-            "secure_url": f"https://res.cloudinary.com/demo/image/upload/v1/letterboxd/avatars/user_1/avatar/{suffix}.png",
-            "url": f"http://res.cloudinary.com/demo/image/upload/v1/letterboxd/avatars/user_1/avatar/{suffix}.png",
+            "public_id": f"bingesaga/avatars/user_1/avatar/{suffix}",
+            "secure_url": f"https://res.cloudinary.com/demo/image/upload/v1/bingesaga/avatars/user_1/avatar/{suffix}.png",
+            "url": f"http://res.cloudinary.com/demo/image/upload/v1/bingesaga/avatars/user_1/avatar/{suffix}.png",
             "format": "png",
             "width": 512,
             "height": 512,
@@ -44,18 +44,18 @@ def test_avatar_upload_stores_secure_url(client, test_user, monkeypatch):
         headers=headers,
     )
     assert response.status_code == 200, response.text
-    assert response.json()["avatar_url"] == "https://res.cloudinary.com/demo/image/upload/v1/letterboxd/avatars/user_1/avatar/abc123.png"
+    assert response.json()["avatar_url"] == "https://res.cloudinary.com/demo/image/upload/v1/bingesaga/avatars/user_1/avatar/abc123.png"
 
     profile = client.get("/api/user/profile", headers=headers)
     assert profile.status_code == 200
-    assert profile.json()["avatar_url"] == "https://res.cloudinary.com/demo/image/upload/v1/letterboxd/avatars/user_1/avatar/abc123.png"
+    assert profile.json()["avatar_url"] == "https://res.cloudinary.com/demo/image/upload/v1/bingesaga/avatars/user_1/avatar/abc123.png"
 
     client.post(
         "/api/user/avatar",
         files={"file": ("new.png", b"new-bytes", "image/png")},
         headers=headers,
     )
-    assert "letterboxd/avatars/user_1/avatar/abc123" in deleted
+    assert "bingesaga/avatars/user_1/avatar/abc123" in deleted
 
 
 def test_avatar_upload_validates_type_and_size(client, test_user, monkeypatch):
@@ -81,9 +81,9 @@ def test_media_upload_returns_asset_metadata(client, test_user, monkeypatch):
     headers = _auth_headers(client)
 
     fake_asset = {
-        "public_id": "letterboxd/uploads/user_1/media/abc456",
-        "secure_url": "https://res.cloudinary.com/demo/image/upload/v1/letterboxd/uploads/user_1/media/abc456.jpg",
-        "url": "http://res.cloudinary.com/demo/image/upload/v1/letterboxd/uploads/user_1/media/abc456.jpg",
+        "public_id": "bingesaga/uploads/user_1/media/abc456",
+        "secure_url": "https://res.cloudinary.com/demo/image/upload/v1/bingesaga/uploads/user_1/media/abc456.jpg",
+        "url": "http://res.cloudinary.com/demo/image/upload/v1/bingesaga/uploads/user_1/media/abc456.jpg",
         "format": "jpg",
         "width": 800,
         "height": 600,

@@ -1,10 +1,10 @@
-# Letterboxd
+# BingeSaga
 
 A full-stack film diary application for discovering films, tracking watch status, and publishing rated reviews.
 
 ## Overview
 
-Letterboxd is a React single-page application backed by an asynchronous FastAPI API. It gives users a place to search and browse movie data, keep a watchlist, record watched films with an optional rating and date, and create one review per film. Public profile statistics, movie statistics, person pages, and movie reviews are also exposed by the API.
+BingeSaga is a React single-page application backed by an asynchronous FastAPI API. It gives users a place to search and browse movie data, keep a watchlist, record watched films with an optional rating and date, and create one review per film. Public profile statistics, movie statistics, person pages, and movie reviews are also exposed by the API.
 
 The implementation combines a PostgreSQL source of record with Redis for short-lived response caching and rate limiting. Movie metadata is retrieved from TMDB and normalized into the application's movie shape; optional background work moves movie artwork to Cloudinary. Celery keeps artwork processing and authentication audit persistence off the request path.
 
@@ -98,9 +98,9 @@ flowchart TD
 
 Two independent caches are present.
 
-**Application response cache.** Redis JSON values are prefixed `letterboxd:db:v1:`. For five minutes, the API caches movie details (`movie:{id}`), movie stats (`movie:{id}:stats`), user stats (`user:{id}:stats`), a user's watchlist and watched list, and paginated review lists. Review-list keys include a version segment, such as `user:{id}:reviews:v{n}:all:{page}:{limit}` and `movie:{id}:reviews:v{n}:{page}:{limit}`. Creating, updating, or deleting reviews bumps the matching version; list, review, watched, and profile mutations invalidate related keys.
+**Application response cache.** Redis JSON values are prefixed `bingesaga:db:v1:`. For five minutes, the API caches movie details (`movie:{id}`), movie stats (`movie:{id}:stats`), user stats (`user:{id}:stats`), a user's watchlist and watched list, and paginated review lists. Review-list keys include a version segment, such as `user:{id}:reviews:v{n}:all:{page}:{limit}` and `movie:{id}:reviews:v{n}:{page}:{limit}`. Creating, updating, or deleting reviews bumps the matching version; list, review, watched, and profile mutations invalidate related keys.
 
-**TMDB adapter cache.** External movie, search, person, and collection responses use keys under `letterboxd:cache:v1:` and a 15-minute TTL. The adapter follows cache-aside behavior: read Redis first, fetch on a miss, then populate the cache. Its per-process `_in_flight` task map coalesces concurrent requests for the same external key. If Redis is absent or an external-cache operation fails, it uses a process-local TTL cache instead. The response cache simply behaves as a cache miss when Redis is unavailable.
+**TMDB adapter cache.** External movie, search, person, and collection responses use keys under `bingesaga:cache:v1:` and a 15-minute TTL. The adapter follows cache-aside behavior: read Redis first, fetch on a miss, then populate the cache. Its per-process `_in_flight` task map coalesces concurrent requests for the same external key. If Redis is absent or an external-cache operation fails, it uses a process-local TTL cache instead. The response cache simply behaves as a cache miss when Redis is unavailable.
 
 Redis connection pooling uses health checks, bounded connect/command timeouts, TCP keepalive, and one retry for idempotent cache reads, writes, and deletes. The fixed-window limiter and OTP storage require Redis; the rate limiter deliberately becomes a no-op if Redis is unavailable. TMDB requests use a Redis-backed process-wide limit of 30 requests per 60 seconds when Redis is available.
 
@@ -220,8 +220,8 @@ The supplied Compose file starts **Nginx, the FastAPI backend, and a Celery work
 ### 1. Clone and configure
 
 ```bash
-git clone https://github.com/Devansh-debug344/Letterboxd.git
-cd Letterboxd
+git clone <repository-url> BingeSaga
+cd BingeSaga
 ```
 
 Create a root-level `.env` file with the variables in the next section. The repository does not include an `.env.example`. Do not copy real credentials into documentation or source control.
@@ -312,7 +312,7 @@ TWILIO_PHONE_NUMBER=
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
-CLOUDINARY_FOLDER=letterboxd
+CLOUDINARY_FOLDER=bingesaga
 
 # Optional: fall back to REDIS_URL when unset
 CELERY_BROKER_URL=

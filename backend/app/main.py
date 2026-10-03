@@ -28,7 +28,7 @@ async def lifespan(app: FastAPI):
 
 def create_app():
 
-    app = FastAPI(title="LetterBoxd", version="1.0.0", lifespan=lifespan)
+    app = FastAPI(title="BingeSaga", version="1.0.0", lifespan=lifespan)
 
     origins = ["*"]
 

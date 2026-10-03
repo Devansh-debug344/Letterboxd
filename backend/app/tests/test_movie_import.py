@@ -36,7 +36,7 @@ def _recording_uploader(monkeypatch):
     def upload(data, *, folder, public_id, resource_type):
         calls.append((public_id, data))
         return {
-            "public_id": f"letterboxd/{folder}/{public_id}",
+            "public_id": f"bingesaga/{folder}/{public_id}",
             "secure_url": f"https://res.cloudinary.com/x/{folder}/{public_id}.jpg",
         }
 
@@ -53,9 +53,9 @@ async def test_uploads_artwork_and_is_idempotent(monkeypatch, db):
     assert result["status"] == "processed"
     assert set(result["updates"]) == {"poster", "poster_public_id", "backdrop", "backdrop_public_id"}
     assert len(calls) == 2
-    assert movie.poster_public_id == "letterboxd/movies/123/poster"
+    assert movie.poster_public_id == "bingesaga/movies/123/poster"
     assert movie.poster == "https://res.cloudinary.com/x/movies/123/poster.jpg"
-    assert movie.backdrop_public_id == "letterboxd/movies/123/backdrop"
+    assert movie.backdrop_public_id == "bingesaga/movies/123/backdrop"
 
     again = await process_movie_media_async(db, "123", movie.poster, movie.backdrop)
     assert again["updates"] == []
@@ -108,7 +108,7 @@ async def test_backdrop_failure_raises_for_retry(monkeypatch, db):
         if public_id.endswith("/backdrop"):
             raise RuntimeError("backdrop upload failed")
         return {
-            "public_id": f"letterboxd/{folder}/{public_id}",
+            "public_id": f"bingesaga/{folder}/{public_id}",
             "secure_url": f"https://res.cloudinary.com/x/{folder}/{public_id}.jpg",
         }
 
@@ -117,7 +117,7 @@ async def test_backdrop_failure_raises_for_retry(monkeypatch, db):
     with pytest.raises(MovieImageImportError):
         await process_movie_media_async(db, "123", movie.poster, movie.backdrop)
     await db.refresh(movie)
-    assert movie.poster_public_id == "letterboxd/movies/123/poster"
+    assert movie.poster_public_id == "bingesaga/movies/123/poster"
     assert movie.backdrop_public_id is None
 
 

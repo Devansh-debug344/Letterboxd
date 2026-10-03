@@ -42,7 +42,7 @@ class OTPService:
     def _dispatch_sms(phone_number: str, code: str) -> None:
         client = Client(setting.TWILIO_API_KEY, setting.TWILIO_API_SECRET, setting.TWILIO_ACCOUNT_SID)
         client.messages.create(
-            body=f"Letterboxd PVT LTD . Your OTP is: {code}. Valid for 10 minutes.",
+            body=f"BingeSaga PVT LTD . Your OTP is: {code}. Valid for 10 minutes.",
             from_=setting.TWILIO_PHONE_NUMBER,
             to=phone_number,
         )

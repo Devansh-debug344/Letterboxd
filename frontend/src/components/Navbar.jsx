@@ -41,7 +41,7 @@ function Navbar() {
   const handleUpgrade = () => {
     openPayment({
       amount: 199,
-      name: "Letterboxd Pro",
+      name: "BingeSaga Pro",
       description: "Monthly subscription",
       onSuccess: (res) => {
         alert("Payment done! ID: " + res.razorpay_payment_id);

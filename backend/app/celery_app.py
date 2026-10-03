@@ -9,7 +9,7 @@ from celery import Celery
 from app.config import setting
 
 celery_app = Celery(
-    "letterboxd",
+    "bingesaga",
     broker=setting.CELERY_BROKER_URL or setting.REDIS_URL,
     backend=setting.CELERY_RESULT_BACKEND or setting.REDIS_URL,
     include=["app.tasks.auth_event", "app.tasks.movie_media"],

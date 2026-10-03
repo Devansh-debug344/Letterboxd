@@ -56,7 +56,7 @@ def _run_auth_events(task, payloads: list[dict]) -> None:
         raise task.retry(exc=exc, countdown=_backoff(task)) from exc
 
 
-@celery_app.task(bind=True, name="letterboxd.log_auth_event", max_retries=3)
+@celery_app.task(bind=True, name="bingesaga.log_auth_event", max_retries=3)
 def log_auth_event_task(self, auth_events: dict | list[dict]) -> None:
     """Persist one legacy event or a batch produced by AuditService."""
     if isinstance(auth_events, dict):

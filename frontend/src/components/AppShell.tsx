@@ -13,7 +13,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {navigating && <div className="route-progress" aria-label="Loading page" />}
       <header className="topbar">
         <Link className="wordmark" to="/home">
-          <Film size={19} /> Letterboxd
+          <Film size={19} /> BingeSaga
         </Link>
         <nav>
           <NavLink to="/home" className={item} onClick={() => setNavigating(true)}>

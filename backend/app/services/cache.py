@@ -8,7 +8,7 @@ from redis.exceptions import TimeoutError as RedisTimeoutError
 
 from app.db.redis import get_redis
 
-_PREFIX = "letterboxd:db:v1:"
+_PREFIX = "bingesaga:db:v1:"
 _JSON_PRIMITIVES = (str, int, float, bool, type(None))
 _RETRYABLE_REDIS_ERRORS = (RedisConnectionError, RedisTimeoutError)
 _logger = logging.getLogger(__name__)

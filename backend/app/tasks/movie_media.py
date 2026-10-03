@@ -36,6 +36,6 @@ def _run_movie_media(task, imdb_id: str, poster_url=None, backdrop_url=None) -> 
         raise task.retry(exc=exc, countdown=_backoff(task)) from exc
 
 
-@celery_app.task(bind=True, name="letterboxd.process_movie_media", max_retries=5)
+@celery_app.task(bind=True, name="bingesaga.process_movie_media", max_retries=5)
 def process_movie_media_task(self, imdb_id: str, poster_url=None, backdrop_url=None) -> dict:
     return _run_movie_media(self, imdb_id, poster_url, backdrop_url)

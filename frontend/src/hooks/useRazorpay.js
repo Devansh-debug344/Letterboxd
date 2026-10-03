@@ -15,7 +15,7 @@ const useRazorpay = () => {
         email: "test@example.com",
         contact: "9999999999",
       },
-      theme: { color: "#00e054" },  // Letterboxd green :)
+      theme: { color: "#00e054" },  // BingeSaga green :)
     };
 
     const rzp = new window.Razorpay(options);

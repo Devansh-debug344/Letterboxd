@@ -21,7 +21,7 @@ class Setting(BaseSettings):
     CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME", "")
     CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
     CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
-    CLOUDINARY_FOLDER: str = os.getenv("CLOUDINARY_FOLDER", "letterboxd")
+    CLOUDINARY_FOLDER: str = os.getenv("CLOUDINARY_FOLDER", "bingesaga")
     CELERY_BROKER_URL: str = os.getenv("CELERY_BROKER_URL", "")
     CELERY_RESULT_BACKEND: str = os.getenv("CELERY_RESULT_BACKEND", "")
     # Keep these below the idle timeout of any NAT/load balancer in front of
@@ -52,7 +52,7 @@ setting = Setting()
 
 #     @classmethod
 #     def set_env(cls) -> "Setting":
-#         app_name = os.getenv("app_name" , "Letterboxd")
+#         app_name = os.getenv("app_name" , "BingeSaga")
 #         db_url   = os.getenv("db_url")
 
 #         if not db_url:
