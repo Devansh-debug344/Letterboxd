@@ -1,4 +1,7 @@
 """Task-level tests: execution, retries, and AuthEvent failure safety."""
+import asyncio
+import threading
+
 import pytest
 from celery.exceptions import Retry
 from sqlalchemy import select
@@ -6,6 +9,7 @@ from sqlalchemy import select
 from app.models.auth_event import AuthEvent
 from app.schemas.auth_event import AuthEventSchema
 from app.services.auth_event import AuditService
+from app.services.background_dispatch import background_dispatcher
 from app.services.movie_import import MovieImageImportError
 from app.tasks import auth_event as ae
 from app.tasks import movie_media as mt
@@ -120,7 +124,7 @@ def test_audit_service_dispatches_serializable_payload(monkeypatch):
     monkeypatch.setattr("app.tasks.auth_event.log_auth_event_task", _Fake())
 
     AuditService.log_event(AuthEventSchema(event_type="login", status="success", user_id=1))
-    assert sent == [
+    assert sent == [[
         {
             "event_type": "login",
             "status": "success",
@@ -129,7 +133,7 @@ def test_audit_service_dispatches_serializable_payload(monkeypatch):
             "ip_address": None,
             "user_agent": None,
         }
-    ]
+    ]]
 
 
 def test_audit_service_failure_does_not_raise(monkeypatch):
@@ -142,3 +146,29 @@ def test_audit_service_failure_does_not_raise(monkeypatch):
 
     AuditService.log_event(AuthEventSchema(event_type="login", status="failed", user_id=None))
     AuditService.log_event(AuthEventSchema(event_type="refresh", status="success", user_id=7))
+
+
+@pytest.mark.asyncio
+async def test_audit_service_does_not_block_an_async_request(monkeypatch):
+    started = threading.Event()
+    release = threading.Event()
+
+    def slow_publish(_payload):
+        started.set()
+        # The test only releases this after proving log_event returned.
+        release.wait(timeout=1)
+
+    monkeypatch.setattr(AuditService, "_publish_batch", staticmethod(lambda _payloads: slow_publish(None)))
+
+    await background_dispatcher.start()
+    await AuditService.start()
+    try:
+        loop = asyncio.get_running_loop()
+        began_at = loop.time()
+        AuditService.log_event(AuthEventSchema(event_type="login", status="success", user_id=1))
+        assert loop.time() - began_at < 0.05
+        assert await asyncio.to_thread(started.wait, 1)
+    finally:
+        release.set()
+        await AuditService.stop()
+        await background_dispatcher.stop()

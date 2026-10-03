@@ -6,16 +6,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api import login, user, watchlist, review, otp, watched, movie, media
 from app.db.session import engine
 from app.db.redis import close_redis, init_redis
+from app.services.auth_event import AuditService
+from app.services.background_dispatch import background_dispatcher
 from app.services.fetch_api import close_client
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_redis()
-    yield
-    await close_client()
-    await close_redis()
-    await engine.dispose()
+    await background_dispatcher.start()
+    await AuditService.start()
+    try:
+        yield
+    finally:
+        await AuditService.stop()
+        await background_dispatcher.stop()
+        await close_client()
+        await close_redis()
+        await engine.dispose()
 
 
 def create_app():

@@ -24,5 +24,16 @@ celery_app.conf.update(
     task_acks_late=True,
     task_reject_on_worker_lost=True,
     broker_connection_retry_on_startup=True,
+    # Publishing audit events must not keep an HTTP request waiting through
+    # broker reconnect attempts. Workers still retry their own broker
+    # connections at startup and task execution retries remain unchanged.
+    task_publish_retry=False,
+    broker_transport_options={
+        "socket_connect_timeout": 1,
+        "socket_timeout": 1,
+        "retry_on_timeout": False,
+        "health_check_interval": 30,
+        "max_connections": 10,
+    },
     worker_prefetch_multiplier=1,
 )

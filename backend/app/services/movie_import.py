@@ -14,6 +14,7 @@ import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.movie import get_movie_by_omdb_id, update_movie_media
+from app.services.background_dispatch import background_dispatcher
 from app.services.cache import invalidate
 from app.services.cloudinary_service import cloudinary_configured, upload_image
 
@@ -107,12 +108,13 @@ async def process_movie_media_async(
 
 
 def enqueue_movie_media(imdb_id: str, poster_url: str | None, backdrop_url: str | None) -> None:
-    """Fire-and-forget dispatch of media processing. Never blocks the request."""
+    """Queue media processing without synchronously publishing to Celery."""
     if not imdb_id:
         return
-    try:
+
+    def publish() -> None:
         from app.tasks.movie_media import process_movie_media_task
 
         process_movie_media_task.delay(imdb_id=imdb_id, poster_url=poster_url, backdrop_url=backdrop_url)
-    except Exception:
-        logger.warning("Unable to enqueue movie media processing for %s", imdb_id, exc_info=True)
+
+    background_dispatcher.submit(f"movie-media:{imdb_id}", publish)

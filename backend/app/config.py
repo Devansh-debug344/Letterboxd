@@ -31,6 +31,13 @@ class Setting(BaseSettings):
     REDIS_SOCKET_TIMEOUT: float = float(os.getenv("REDIS_SOCKET_TIMEOUT", "2"))
     REDIS_HEALTH_CHECK_INTERVAL: float = float(os.getenv("REDIS_HEALTH_CHECK_INTERVAL", "30"))
     REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "50"))
+    # Best-effort Celery dispatches are bounded so broker outages cannot
+    # exhaust request workers.
+    BACKGROUND_DISPATCH_QUEUE_SIZE: int = int(os.getenv("BACKGROUND_DISPATCH_QUEUE_SIZE", "1000"))
+    BACKGROUND_DISPATCH_PUBLISHERS: int = int(os.getenv("BACKGROUND_DISPATCH_PUBLISHERS", "2"))
+    AUDIT_EVENT_QUEUE_SIZE: int = int(os.getenv("AUDIT_EVENT_QUEUE_SIZE", "1000"))
+    AUDIT_EVENT_BATCH_SIZE: int = int(os.getenv("AUDIT_EVENT_BATCH_SIZE", "50"))
+    AUDIT_EVENT_BATCH_WAIT_MS: int = int(os.getenv("AUDIT_EVENT_BATCH_WAIT_MS", "50"))
 
     # class Config:
     #     env_file = ".env"
@@ -55,4 +62,3 @@ setting = Setting()
 #            app_name =app_name,
 #            db_url   = db_url
 #         )
-
