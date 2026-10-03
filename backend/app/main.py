@@ -30,7 +30,7 @@ def create_app():
 
     app = FastAPI(title="BingeSaga", version="1.0.0", lifespan=lifespan)
 
-    origins = ["*"]
+    origins = ["https://www.devansh.online"]
 
     app.add_middleware(
         CORSMiddleware,

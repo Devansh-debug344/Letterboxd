@@ -121,7 +121,7 @@ Login and OTP verification issue an opaque refresh token as well as an access to
 
 Redis rate limiting is applied to authentication and most API operations. Avatar and media uploads require authentication, validate content type, and cap files at 5 MB. Cloudinary credentials, the JWT signing secret, database URL, and external API credentials are supplied through environment variables and should never be committed.
 
-The current FastAPI CORS configuration allows all origins while enabling credentials. Treat that as an implementation detail to review before exposing the service beyond its intended deployment.
+The FastAPI CORS configuration allows credentialed requests from `https://www.devansh.online`.
 
 ## API
 
